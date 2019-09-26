@@ -10,11 +10,12 @@ const LOCAL_URL = parsedSecret.local.URL;
 
 const BAOBAB_NETWORK_ID = '1001';
 const BAOBAB_DEPLOYER = parsedSecret.baobab.deployer;
-const BAOBAB_URL = parsedSecret.URL;
+const BAOBAB_URL = parsedSecret.baobab.URL;
 
 const CYPRESS_NETWORK_ID = '8217';
 const CYPRESS_DEPLOYER = parsedSecret.cypress.deployer;
-const CYPRESS_URL = parsedSecret.URL;
+const CYPRESS_URL = parsedSecret.cypress.URL;
+const CYPRESS_PUBLIC_EN_URL = parsedSecret.cypressPublicEN.URL;
 
 module.exports = {
   networks: {
@@ -38,11 +39,19 @@ module.exports = {
       gas: '8500000',
       gasPrice: null,
     },
+    
+    cypressPublicEN: {
+      provider: () => new HDWalletProvider(CYPRESS_DEPLOYER.privateKey, CYPRESS_PUBLIC_EN_URL),
+      network_id: CYPRESS_NETWORK_ID,
+      gas: '8500000',
+      gasPrice: null,
+    },
   },
 
   // Set default mocha options here, use special reporters etc.
   mocha: {
     // timeout: 100000
+    useColors: true
   },
 
   // Configure your compilers

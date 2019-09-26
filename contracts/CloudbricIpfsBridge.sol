@@ -93,6 +93,11 @@ contract CloudbricIpfsBridge is Ownable {
         returns (bytes32 hash, uint8 hash_funciton, uint8 size)
     {
         bytes32 wafBlackIpIdx = _wafBlackIps.lookUpTable[_index];
+        require(
+            wafBlackIpIdx[0] != 0,
+            "Valid index required."
+        );
+
         Multihash storage multihash = _wafBlackIps.multihash[wafBlackIpIdx];
         emit GetWafBlackIp(msg.sender, multihash.hash, multihash.hashFunction, multihash.size);
         return (multihash.hash, multihash.hashFunction, multihash.size);
@@ -105,7 +110,6 @@ contract CloudbricIpfsBridge is Ownable {
     function getWafBlackIpAtIndex(bytes32 _clbIndex)
         public
         onlyValidIndexAllowed(_clbIndex)
-        onlyUniqueMultihashAllowed(_wafBlackIps.multihash[_clbIndex])
         returns (bytes32 hash, uint8 hash_funciton, uint8 size)
     {
         Multihash storage multihash = _wafBlackIps.multihash[_clbIndex];

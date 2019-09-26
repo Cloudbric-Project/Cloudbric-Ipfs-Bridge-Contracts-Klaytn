@@ -7637,10 +7637,109 @@
       "links": {},
       "address": "0xEdEE509ff96428f41AB97Cc5B1A24157D889293F",
       "transactionHash": "0x0cf8b350af3c97429159add41a592ff9b8c769e09c7a12e479603aa55f607e68"
+    },
+    "8217": {
+      "events": {
+        "0x6b52d7e4965c746bbadc949c0fbd1a50045597a3f06e8ed83aff65800d590b0b": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "hash",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "name": "hashFunction",
+              "type": "uint8"
+            },
+            {
+              "indexed": false,
+              "name": "size",
+              "type": "uint8"
+            }
+          ],
+          "name": "GetWafBlackIp",
+          "type": "event",
+          "signature": "0x6b52d7e4965c746bbadc949c0fbd1a50045597a3f06e8ed83aff65800d590b0b"
+        },
+        "0x1ab45cd7ee3af6097ba259a2d8bec9cab0a5d535b432acb14feff0a2e0894a7b": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "clbIndex",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "name": "hash",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "name": "hashFunction",
+              "type": "uint8"
+            },
+            {
+              "indexed": false,
+              "name": "size",
+              "type": "uint8"
+            }
+          ],
+          "name": "AddWafBlackIp",
+          "type": "event",
+          "signature": "0x1ab45cd7ee3af6097ba259a2d8bec9cab0a5d535b432acb14feff0a2e0894a7b"
+        },
+        "0xf8df31144d9c2f0f6b59d69b8b98abd5459d07f2742c4df920b25aae33c64820": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "previousOwner",
+              "type": "address"
+            }
+          ],
+          "name": "OwnershipRenounced",
+          "type": "event",
+          "signature": "0xf8df31144d9c2f0f6b59d69b8b98abd5459d07f2742c4df920b25aae33c64820"
+        },
+        "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "previousOwner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "OwnershipTransferred",
+          "type": "event",
+          "signature": "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0"
+        }
+      },
+      "links": {},
+      "address": "0x7F352568621E09e5CDc9D84143AF2eAA06163b5f",
+      "transactionHash": "0x65f656f695c77d8d4d2c1f1d33ad5b805590d0a490f5967816a38a0fbaea21ca"
     }
   },
   "schemaVersion": "3.0.16",
-  "updatedAt": "2019-09-25T15:27:50.003Z",
+  "updatedAt": "2019-09-26T08:12:12.607Z",
   "devdoc": {
     "methods": {
       "addWafBlackIp(bytes32,bytes32,uint8,uint8)": {
