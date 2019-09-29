@@ -34,7 +34,7 @@ const cloudbricIpfsBridge = new caver.klay.Contract(abiOfIpfsBridge, deployedAdd
 const abiWafBlackIpsSize = cloudbricIpfsBridge.methods.wafBlackIpsSize.call().encodeABI();
 console.log(abiWafBlackIpsSize);
 
-let feeDelegatedSmartContractExecute = async () => {
+async function feeDelegatedSmartContractExecute () {
     let feeDelegatedSmartContractObject = {
         type: 'FEE_DELEGATED_SMART_CONTRACT_EXECUTION',
         from: alice.address,
@@ -43,19 +43,33 @@ let feeDelegatedSmartContractExecute = async () => {
         gas: GAS_LIMIT
     };
 
-    let rlpEncodedTransaction = await caver.klay.accounts.signTransaction(
-        feeDelegatedSmartContractObject,
-        caver.klay.accounts.wallet[alice.address].privateKey
-    );
+    let rlpEncodedTransaction = null;
+    try {
+        rlpEncodedTransaction = await caver.klay.accounts.signTransaction(
+            feeDelegatedSmartContractObject,
+            caver.klay.accounts.wallet[alice.address].privateKey
+        );
+    } catch (error) {
+        throw Error(error);
+    }
 
     console.log(rlpEncodedTransaction);
 
-    let receipt = await caver.klay.sendTransaction({
-        senderRawTransaction: rlpEncodedTransaction.rawTransaction,
-        feePayer: delegate.address,
-    });
-
+    let recipt = null;
+    try {
+        receipt = await caver.klay.sendTransaction({
+            senderRawTransaction: rlpEncodedTransaction.rawTransaction,
+            feePayer: delegate.address,
+        });
+    } catch (error) {
+        throw Error(error);
+    }
     console.log(receipt);
 }
 
-feeDelegatedSmartContractExecute();
+feeDelegatedSmartContractExecute()
+    .catch(
+        (error) => {
+            console.log(error)
+        }
+    );
