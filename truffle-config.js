@@ -5,15 +5,15 @@ const secret = fs.readFileSync(".secret.json").toString();
 const parsedSecret = JSON.parse(secret);
 
 const LOCAL_NETWORK_ID = '1001';
-const LOCAL_DEPLOYER = parsedSecret.local.deployer;
+const LOCAL_DEPLOYER = parsedSecret.local.accounts.deployer;
 const LOCAL_URL = parsedSecret.local.URL;
 
 const BAOBAB_NETWORK_ID = '1001';
-const BAOBAB_DEPLOYER = parsedSecret.baobab.deployer;
+const BAOBAB_DEPLOYER = parsedSecret.baobab.accounts.deployer;
 const BAOBAB_URL = parsedSecret.baobab.URL;
 
 const CYPRESS_NETWORK_ID = '8217';
-const CYPRESS_DEPLOYER = parsedSecret.cypress.deployer;
+const CYPRESS_DEPLOYER = parsedSecret.cypress.accounts.deployer;
 const CYPRESS_URL = parsedSecret.cypress.URL;
 const CYPRESS_PUBLIC_EN_URL = parsedSecret.cypressPublicEN.URL;
 

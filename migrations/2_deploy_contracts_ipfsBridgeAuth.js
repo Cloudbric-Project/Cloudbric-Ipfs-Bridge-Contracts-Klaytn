@@ -6,11 +6,11 @@ module.exports = function (deployer) {
         .then(() => {
             if (CloudbricIpfsBridgeAuth._json) {
                 fs.writeFile(
-                    'deployedAbiOfIpfsBridgeAuth',
+                    'deployedMetadataOfIpfsBridgeAuth',
                     JSON.stringify(CloudbricIpfsBridgeAuth._json, 2),
                     (err) => {
                         if (err) throw err
-                        console.log(`The abi of ${CloudbricIpfsBridgeAuth._json.contractName} is recorded on deployedAbiOfIpfsBridgeAuth file`)
+                        console.log(`The metadata of ${CloudbricIpfsBridgeAuth._json.contractName} is recorded on deployedOfIpfsBridgeAuth file`)
                     }
                 )
             }
