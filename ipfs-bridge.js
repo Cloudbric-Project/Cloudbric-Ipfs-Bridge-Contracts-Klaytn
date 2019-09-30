@@ -1,45 +1,42 @@
-const fs = require('fs');
+const caverConfig = require('./config/caver');
+const secret = require('./config/secret');
+const contract = require('./config/contract');
+const constant = require('./config/constant');
 
-const secret = fs.readFileSync(".secret.json").toString();
-const parsedSecret = JSON.parse(secret);
+const vault = secret.vault;
+const caver = caverConfig.caver;
 
-const Caver = require('caver-js');
-const caver = new Caver(parsedSecret.local.URL);
+const cloudbricIpfsBridgeAuth = contract.cloudbricIpfsBridgeAuth;
+const cloudbricIpfsBridge = contract.cloudbricIpfsBridge;
 
-let deployedMetadataOfIpfsBridgeAuth = fs.readFileSync('deployedMetadataOfIpfsBridgeAuth');
-let deployedAddressOfIpfsBridgeAuth  = fs.readFileSync('deployedAddressOfIpfsBridgeAuth', 'utf-8');
-
-let deployedMetadataOfIpfsBridge = fs.readFileSync('deployedMetadataOfIpfsBridge');
-let deployedAddressOfIpfsBridge = fs.readFileSync('deployedAddressOfIpfsBridge', 'utf-8');
-
-let abiOfIpfsBridgeAuth = JSON.parse(deployedMetadataOfIpfsBridgeAuth).abi;
-let abiOfIpfsBridge = JSON.parse(deployedMetadataOfIpfsBridge).abi;
-const GAS_LIMIT = 300000;
-
-const deployer = parsedSecret.local.accounts.deployer;
-const alice = parsedSecret.local.accounts.alice;
-const delegate = parsedSecret.local.accounts.delegate;
-
-// init wallet
-caver.klay.accounts.wallet.add(deployer.privateKey, deployer.address);
-caver.klay.accounts.wallet.add(alice.privateKey, alice.address);
-
-let addr = alice.address;
-caver.klay.accounts.wallet[addr].privateKey;
-
-const cloudbricIpfsBridgeAuth = new caver.klay.Contract(abiOfIpfsBridgeAuth, deployedAddressOfIpfsBridgeAuth);
-const cloudbricIpfsBridge = new caver.klay.Contract(abiOfIpfsBridge, deployedAddressOfIpfsBridge);
+const GAS_LIMIT = constant.GAS_LIMIT;
 
 // method ABI collection
 const abiWafBlackIpsSize = cloudbricIpfsBridge.methods.wafBlackIpsSize.call().encodeABI();
-console.log(abiWafBlackIpsSize);
 
-async function feeDelegatedSmartContractExecute () {
+// init wallet
+caver.klay.accounts.wallet.add(
+    vault.local.accounts.deployer.privateKey, 
+    vault.local.accounts.deployer.address
+);
+caver.klay.accounts.wallet.add(
+    vault.local.accounts.alice.privateKey, 
+    vault.local.accounts.alice.address
+);
+
+/**
+ * 
+ * @from address of user. each transaction will be executed by uniuqe user.
+ * @to address of smart conrtract.
+ * @delegate address of fee delagte
+ * @abiOfMethod encoded ABI of smart contract method.
+ */
+async function feeDelegatedSmartContractExecute (from, to, delegate, abiOfMethod) {
     let feeDelegatedSmartContractObject = {
         type: 'FEE_DELEGATED_SMART_CONTRACT_EXECUTION',
-        from: alice.address,
-        to: deployedAddressOfIpfsBridge,
-        data: abiWafBlackIpsSize,
+        from: from,
+        to: to,
+        data: abiOfMethod,
         gas: GAS_LIMIT
     };
 
@@ -47,19 +44,18 @@ async function feeDelegatedSmartContractExecute () {
     try {
         rlpEncodedTransaction = await caver.klay.accounts.signTransaction(
             feeDelegatedSmartContractObject,
-            caver.klay.accounts.wallet[alice.address].privateKey
+            caver.klay.accounts.wallet[from].privateKey
         );
     } catch (error) {
         throw Error(error);
     }
-
     console.log(rlpEncodedTransaction);
 
     let recipt = null;
     try {
         receipt = await caver.klay.sendTransaction({
             senderRawTransaction: rlpEncodedTransaction.rawTransaction,
-            feePayer: delegate.address,
+            feePayer: delegate,
         });
     } catch (error) {
         throw Error(error);
@@ -67,9 +63,14 @@ async function feeDelegatedSmartContractExecute () {
     console.log(receipt);
 }
 
-feeDelegatedSmartContractExecute()
-    .catch(
+feeDelegatedSmartContractExecute(
+        vault.local.accounts.alice.address,
+        contract.addressOfIpfsBridge,
+        vault.local.accounts.delegate.address,
+        abiWafBlackIpsSize    
+    ).catch(
         (error) => {
-            console.log(error)
+            console.log(error);
         }
     );
+
