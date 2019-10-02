@@ -11,12 +11,9 @@ const CloudbricIpfsBridge = artifacts.require("CloudbricIpfsBridge.sol");
 const CloudbricIpfsBridgeAuth = artifacts.require("CloudbricIpfsBridgeAuth");
 
 let owner = null;
-let whiteUser = null;
-let nonWhiteUser = null;
 let alice = null;
 let bob = null;
 
-let cibAuth = null;
 let cib = null;
 
 // dummy data set

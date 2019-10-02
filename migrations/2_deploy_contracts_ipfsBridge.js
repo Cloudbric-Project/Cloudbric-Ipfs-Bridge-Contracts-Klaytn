@@ -1,9 +1,8 @@
 const CloudbricIpfsBridge = artifacts.require('./CloudbricIpfsBridge.sol');
 const fs = require('fs');
-const ipfsBridgeAuthContractAddress = fs.readFileSync('../deployedAddressOfIpfsBridgeAuth', 'utf-8');
 
 module.exports = function (deployer) {
-    deployer.deploy(CloudbricIpfsBridge, ipfsBridgeAuthContractAddress)
+    deployer.deploy(CloudbricIpfsBridge)
         .then(() => {
             if (CloudbricIpfsBridge._json) {
                 fs.writeFile(
