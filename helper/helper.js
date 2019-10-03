@@ -2,7 +2,7 @@ const caverConfig = require('../config/caver');
 const caver = caverConfig.caver;
 
 /**
- * create Solidity data type bytes32 from Javascript string data type.
+ * create Solidity data type bytes32 from Javascript String data type.
  * @method stringToBytes32
  * @param {String} stringData
  * @return {String} bytes32
@@ -11,6 +11,16 @@ function stringToBytes32 (stringData) {
     hexConverted = caver.utils.asciiToHex(stringData);
     bytes32 = caver.utils.padRight(hexConverted, 64);
     return bytes32;
+}
+
+/**
+ * convert bytes32 to Javascript String data type.
+ * @param {Stirng} bytes32
+ * @return {String} ascii 
+ */
+function bytes32ToString(bytes32) {
+    ascii = caver.utils.hexToAscii(bytes32);
+    return ascii;
 }
 
 /**
