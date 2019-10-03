@@ -65,7 +65,7 @@ function createDummy(i) {
 
 async function createDataBase() {
     console.log(`==================================== create database ====================================`);
-    const limit = 1000;
+    const limit = 500;
     caver.klay.accounts.wallet.add(
         vault.local.accounts.delegate.privateKey, 
         vault.local.accounts.delegate.address
@@ -100,7 +100,8 @@ async function createDataBase() {
                 encodedSize
             ).encodeABI();
 
-        let result = null; 
+        let result = null;
+        /*
         try {
             result = await feeDelegatedSmartContractExecute(
                 fromAddress,
@@ -113,6 +114,14 @@ async function createDataBase() {
             console.log(error);
             // error recover process
         }
+        */
+        feeDelegatedSmartContractExecute(
+            fromAddress,
+            fromPrivateKey,
+            contract.addressOfIpfsBridge,
+            vault.local.accounts.delegate,
+            abiAddWafBlackIp
+        );
         console.log(`========================================================================`); 
     }
 }
@@ -122,5 +131,5 @@ async function scanDatabase() {
     console.log(wafBlackIpListSize);
 }
 
-//createDataBase();
-scanDatabase();
+createDataBase();
+//scanDatabase();
