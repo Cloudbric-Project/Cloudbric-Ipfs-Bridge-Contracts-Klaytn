@@ -47,9 +47,9 @@ function ipfsHashToMultihash(ipfsHash) {
     const decodedHexString = bs58.decode(ipfsHash).toString('hex');
     
     return {
-        hashFunction: decoded.slice(0,2),
-        size: decdoed.slice(2,4),
-        hash: decoded.slice(4) 
+        hashFunction: decodedHexString.slice(0,2),
+        size: decodedHexString.slice(2,4),
+        hash: decodedHexString.slice(4) 
     }
 }
 
@@ -68,12 +68,26 @@ function createRandomHexString (length) {
     return result;
 }
 
-function createDummy(i) {
+/**
+ * create dummy dataset.
+ * @param {Number} idx
+ * @return {Object} dummy data set.
+ */
+function createDummy(idx) {
     return {
-        idxWafBlakcIpList: i,
+        idxWafBlakcIpList: idx,
         wafBlackIpHash: createRandomHexString(30),
         hashFunction: '0x12',
         size: '0x20'
+    }
+}
+
+function encodeDataSet(dataSet) {
+    return {
+        encodedIdxBlackIpList: caver.klay.abi.encodeParameter('uint8', dataSet.idxWafBlakcIpList),
+        encodedWafBlackIpHash: stringToBytes32(dataSet.wafBlackIpHash),
+        encodedHashFunction: caver.klay.abi.encodeParameter('uint8', dataSet.hashFunction),
+        encodedSize: caver.klay.abi.encodeParameter('uint8', dataSet.size),
     }
 }
 
@@ -122,7 +136,11 @@ async function feeDelegatedSmartContractExecute (
 
 module.exports = {
     stringToBytes32: stringToBytes32,
+    bytes32ToString: bytes32ToString,
+    multihashToIpfsHash: multihashToIpfsHash,
+    ipfsHashToMultihash, ipfsHashToMultihash,
     createRandomHexString: createRandomHexString,
     createDummy: createDummy,
+    encodedDataSet: encodeDataSet,
     feeDelegatedSmartContractExecute: feeDelegatedSmartContractExecute
 }
