@@ -1,3 +1,5 @@
+const bs58 = require('bs58');
+const constant = require('../config/constant');
 const caverConfig = require('../config/caver');
 const caver = caverConfig.caver;
 
@@ -24,6 +26,34 @@ function bytes32ToString(bytes32) {
 }
 
 /**
+ * conver multi hash in hexadecimal form to ipfs hash.
+ * @param {Object} multiHash
+ * @return {String} ipfsHash
+ */
+function multihashToIpfsHash(multiHash) {
+    const decodedHexString = multiHash.hashFunction + multiHash.size + multiHash.hash;
+    const bytes = Buffer.from(decodedHexString, 'hex');
+    const ipfsHash = bs58.encode(bytes);
+
+    return ipfsHash;
+}
+
+/**
+ * conver ipfs hash to multi hash form.
+ * @param {String} ipfsHash 
+ * @return {Object} multiHash
+ */
+function ipfsHashToMultihash(ipfsHash) {
+    const decodedHexString = bs58.decode(ipfsHash).toString('hex');
+    
+    return {
+        hashFunction: decoded.slice(0,2),
+        size: decdoed.slice(2,4),
+        hash: decoded.slice(4) 
+    }
+}
+
+/**
  * create random hex string.
  * @param {Number} length
  * @return {String} random hex string.
@@ -38,7 +68,61 @@ function createRandomHexString (length) {
     return result;
 }
 
+function createDummy(i) {
+    return {
+        idxWafBlakcIpList: i,
+        wafBlackIpHash: createRandomHexString(30),
+        hashFunction: '0x12',
+        size: '0x20'
+    }
+}
+
+/**
+ * run fee delegated smart contract execute.
+ * @param {String} fromAddress
+ * @param {String} fromPrivateKey
+ * @param {Object} delegate
+ * @param {Object} abiOfMethod
+ */
+async function feeDelegatedSmartContractExecute (
+    fromAddress, 
+    fromPrivateKey,
+    to, 
+    delegate, 
+    abiOfMethod
+) {
+    let feeDelegatedSmartContractObject = {
+        type: 'FEE_DELEGATED_SMART_CONTRACT_EXECUTION',
+        from: fromAddress,
+        to: to,
+        data: abiOfMethod,
+        gas: constant.GAS_LIMIT,
+    };
+
+    let rlpEncodedTransaction = null;
+    try {
+        rlpEncodedTransaction = await caver.klay.accounts.signTransaction(
+            feeDelegatedSmartContractObject,
+            fromPrivateKey
+        );
+    } catch (error) {
+        throw Error(error);
+    }
+    let receipt = null;
+    try {
+        receipt = await caver.klay.sendTransaction({
+            senderRawTransaction: rlpEncodedTransaction.rawTransaction,
+            feePayer: delegate.address,
+        });
+    } catch (error) {
+        throw Error(error);
+    }
+    return receipt;
+}
+
 module.exports = {
     stringToBytes32: stringToBytes32,
-    createRandomHexString: createRandomHexString 
+    createRandomHexString: createRandomHexString,
+    createDummy: createDummy,
+    feeDelegatedSmartContractExecute: feeDelegatedSmartContractExecute
 }
