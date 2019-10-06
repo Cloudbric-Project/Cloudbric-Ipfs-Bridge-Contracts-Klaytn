@@ -1,8 +1,9 @@
 const CloudbricIpfsBridge = artifacts.require('./CloudbricIpfsBridge.sol');
 const fs = require('fs');
+const deployedAddressOfWhiteList = fs.readFileSync('../deployedAddressOfWhiteList', 'utf-8');
 
 module.exports = function (deployer) {
-    deployer.deploy(CloudbricIpfsBridge)
+    deployer.deploy(CloudbricIpfsBridge, deployedAddressOfWhiteList)
         .then(() => {
             if (CloudbricIpfsBridge._json) {
                 fs.writeFile(

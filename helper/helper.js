@@ -71,7 +71,7 @@ function createRandomHexString (length) {
 /**
  * create dummy dataset.
  * @param {Number} idx
- * @return {Object} dummy data set.
+ * @return {Object} dummy dataset.
  */
 function createDummy(idx) {
     return {
@@ -82,9 +82,14 @@ function createDummy(idx) {
     }
 }
 
+/**
+ * encode dataset.
+ * @param {Object} dataSet
+ * @return {Object} encoded dataset
+ */
 function encodeDataSet(dataSet) {
     return {
-        encodedIdxBlackIpList: caver.klay.abi.encodeParameter('uint8', dataSet.idxWafBlakcIpList),
+        encodedIdxWafBlackIpList: stringToBytes32(dataSet.idxWafBlakcIpList),
         encodedWafBlackIpHash: stringToBytes32(dataSet.wafBlackIpHash),
         encodedHashFunction: caver.klay.abi.encodeParameter('uint8', dataSet.hashFunction),
         encodedSize: caver.klay.abi.encodeParameter('uint8', dataSet.size),
@@ -141,6 +146,6 @@ module.exports = {
     ipfsHashToMultihash, ipfsHashToMultihash,
     createRandomHexString: createRandomHexString,
     createDummy: createDummy,
-    encodedDataSet: encodeDataSet,
+    encodeDataSet: encodeDataSet,
     feeDelegatedSmartContractExecute: feeDelegatedSmartContractExecute
 }

@@ -1,6 +1,7 @@
 pragma solidity 0.4.24;
 
 import "./open-zeppelin/Ownable.sol";
+import "./WhiteList.sol";
 
 /**
  * @title CloudbricIpfsBridge
@@ -37,34 +38,20 @@ contract CloudbricIpfsBridge is Ownable {
     mapping(bytes32 => Multihash) public userReportedPhishingUrlList;
     bytes32[] public urpuLookUpTable;
 
+    WhiteList public whiteList;
+
     event AddWafBlackIp(address indexed from, bytes32 clbIndex, bytes32 hash, uint8 hashFunction, uint8 size);
 
-    /*
-    modifier onlyValidIndexAllowed(bytes32 _clbIndex) {
+    modifier onlyWhiteListed(address addr) {
         require(
-            _clbIndex[0] != 0,
-            "Valid index required.");
-        _;
-    }
-
-    modifier shouldLessThanLengthOfLUT(uint _index, DataStorage ds) {
-        require(
-            _index < ds.lookUpTable.length,
-            "Given index should less than length of data"
+            whiteList.isWhiteListed(addr),
+            "Only white listed account can add data"
         );
         _;
     }
 
-    modifier onlyUniqueMultihashAllowed(Multihash multihash) {
-        require(
-            multihash.hash[0] != 0 ||
-            multihash.hashFunction != 0 || multihash.size != 0, "Already exists."
-                   );
-        _;
-    }
-    */
-
-    constructor() public {
+    constructor(address whiteListContractAddress) public {
+        whiteList = WhiteList(whiteListContractAddress);
     }
 
     /**
@@ -85,13 +72,12 @@ contract CloudbricIpfsBridge is Ownable {
     function getWafBlackIpAtIndex(uint _index)
         public
         view
-        //shouldLessThanLengthOfLUT(_index, _wafBlackIpList)
         returns (bytes32 hash, uint8 hash_funciton, uint8 size)
     {
         bytes32 wafBlackIpIdx = wbiLookUpTable[_index];
         require(
-            wafBlackIpIdx[0] != 0,
-            "Valid index required."
+            _index < wbiLookUpTable.length,
+            "Given index is out of bound."
         );
 
         Multihash storage multihash = wafBlackIpList[wafBlackIpIdx];
@@ -105,7 +91,6 @@ contract CloudbricIpfsBridge is Ownable {
     function getWafBlackIpAtClbIndex(bytes32 _clbIndex)
         public
         view
-        //onlyValidIndexAllowed(_clbIndex)
         returns (bytes32 hash, uint8 hash_funciton, uint8 size)
     {
         Multihash storage multihash = wafBlackIpList[_clbIndex];
@@ -124,9 +109,7 @@ contract CloudbricIpfsBridge is Ownable {
         uint8 _size
     )
         public
-        //onlyOwner
-        //onlyValidIndexAllowed(_clbIndex)
-        //onlyUniqueMultihashAllowed(_wafBlackIpList.multihash[_clbIndex])
+        onlyWhiteListed(msg.sender)
         returns (bool)
     {
         wbiLookUpTable.push(_clbIndex);
@@ -134,8 +117,4 @@ contract CloudbricIpfsBridge is Ownable {
         emit AddWafBlackIp(msg.sender, _clbIndex, _hash, _hashFunction, _size);
         return true;
     }
-
-    function deleteWafBlackIp(
-        bytes32 _clbIndex
-    )
 }
