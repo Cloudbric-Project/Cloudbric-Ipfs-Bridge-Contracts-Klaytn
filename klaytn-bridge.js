@@ -5,9 +5,14 @@ const helper = require('./helper/helper');
 
 const vault = secret.vault;
 const caver = caverConfig.caver;
+const whiteList = contract.whiteList;
 const cloudbricIpfsBridge = contract.cloudbricIpfsBridge;
 
-async function createDataBase(limit) {
+async function addDataToIpfs(data) {
+
+}
+
+async function addWafBalckIpBatch(limit) {
     caver.klay.accounts.wallet.add(
         vault.local.accounts.delegate.privateKey, 
         vault.local.accounts.delegate.address
@@ -77,5 +82,4 @@ async function scanDatabase() {
     }
 }
 
-//createDataBase(10);
-scanDatabase();
+//createDataBase(500);

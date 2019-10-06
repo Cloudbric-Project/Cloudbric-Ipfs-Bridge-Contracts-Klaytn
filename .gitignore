@@ -99,4 +99,6 @@ public
 .dynamodb/
 
 ## Cloudbric added
-.secret.json
+**/.secret.json
+**/.db.json
+**/.pushq.json

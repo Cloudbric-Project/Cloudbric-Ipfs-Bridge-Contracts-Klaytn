@@ -12,12 +12,11 @@ contract WhiteList is Ownable {
         require(
             addr != address(0),
             "Only valid address allowed"
-            
         );
         _;
     }
 
-    constructor() {
+    constructor() public {
         // owner must be always whiteListed.
         whiteList[msg.sender] = true;
     }
