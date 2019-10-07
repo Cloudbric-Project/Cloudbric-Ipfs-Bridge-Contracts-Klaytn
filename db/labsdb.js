@@ -1,9 +1,11 @@
 const mysql = require('mysql');
-const appDir = path.dirname('index.js');
-const dbSecret = fs.readFileSync(`${appDir}/helper/.db.json`).toString();
+const fs = require('fs');
+const path = require('path');
 
-const parsedSecret = JSON.parse(dbSecret);
-const vault = parsedSecret.config;
+
+const appDir = path.dirname('index.js');
+const dbSecret = fs.readFileSync(`${appDir}/private/.db.json`).toString();
+const vault = JSON.parse(dbSecret);
 
 class LabsDB {
     constructor(db) {
@@ -11,7 +13,7 @@ class LabsDB {
             host: vault.labs.host,
             port: vault.labs.port,
             user: vault.labs.user,
-            password: vault.labs.passowrd,
+            password: vault.labs.password,
             database: db
         });
     }

@@ -1,7 +1,7 @@
 const HDWalletProvider = require('truffle-hdwallet-provider-klaytn');
 const fs = require('fs');
 
-const secret = fs.readFileSync(".secret.json").toString();
+const secret = fs.readFileSync("./private/.caver.json").toString();
 const parsedSecret = JSON.parse(secret);
 
 const LOCAL_NETWORK_ID = '1001';

@@ -1,70 +1,101 @@
 const fs = require('fs');
 const path = require('path');
-const dateTime = require('node-datetime');
-let log4js = require('log4js');
-
-const labsdb = require('./db/labsdb');
-const br = new labsdb('br');
 
 // direcotry path setup
 const appDir = path.dirname('index.js');
+
+const labsdb = require(`${appDir}/db/labsdb`);
+const br = new labsdb('br');
 const dataStorage = `${appDir}/data/waf_black_ip`;
-const logStorage = `${appDir}/log/waf_black_ip`
 
-// log file name format
-const dt = dateTime.create();
-const todayYmd = dt.format('Y_m_d');
+const logger = require(`${appDir}/helper/logger`);
+const wafBlackIpLogger = logger.getLogger("wafBlackIp");
 
-// configure logger
-log4js.configure({
-    appenders: {
-        wafBlackIp: { 
-            type: 'file', 
-            filename: `${logStorage}/${todayYmd}.log`,
-        pattern: `%d{yyyy/MM/dd-hh.mm} %p %c %m %n` } },
-    categories: { default: { appenders: ['wafBlackIp'], level: 'debug' }}
-})
-const logger = log4js.getLogger('wafBlackIp');
-// logger.debug('waf black ip shoud work correctly');
+const queryBuilder = require(`${appDir}/private/.query_builder`);
 
-// 1. make result of query data to json file.
-// 2. then upload file to ipfs.
-// 3. write log db.
+const pushq = require(`${appDir}/helper/pushq`);
+
+const INITIAL_INSERTED_IDX = '210511986';
 
 // read log and get last inserted date
-const lastInsertedDate = '2019-03-31';
+const lastInsertedIdx = INITIAL_INSERTED_IDX;
+const fetchQuery = queryBuilder.getFetchQuery(lastInsertedIdx, 'brdaily', 100);
 
-const limit = 100;
-const selectQuery = 
-    `SELECT * FROM brdaily \
-    WHERE calculationDate >= ${lastInsertedDate} \
-    ORDER BY calculationDate ASC \
-    LIMIT ${limit}`
-
-wafBlackIpToJSON = async () => {
+async function fetchRows(query) {
     let rows = null;
     try {
-        rows = await br.query(selectQuery);
-        logger.debug(`[SUCCESS] get ${rows.length} rows from brdaily`);
+        rows = await br.query(query);
+        message = logger.getLoggerFormat(
+            "SUCCESS",
+            {
+                "TABLE": "brdaily",
+                "FETCH_LENGTH": rows.length,
+                "FROM_IDX": lastInsertedIdx
+            },
+            `GET ${rows.length} ROWS FROM brdaily`
+        );
+        wafBlackIpLogger.fetch.debug(message);
+        return rows;
     } catch (error) {
-        console.log(error);
+        message = logger.getLoggerFormat(
+            "FAIL",
+            {
+                "TABLE": "brdaily",
+                "FROM_IDX": lastInsertedIdx
+            },
+            `GET ${rows.length} ROWS FROM brdaily`
+        );
+        wafBlackIpLogger.fetch.error(message);
+        await logger.shutdown();
+        pushq.sendMessage(`cloudbric', '[TEST] error fetch row from ${lastInsertedIdx}`);
+        throw(error);
     }
+}
 
+async function convertRowToJSON(rows) {
     rows.forEach((row) => {
         let rowJsonString = JSON.stringify(row);
         let parsedRow = JSON.parse(rowJsonString);
-        try { 
+        try {
             fs.writeFileSync(`${dataStorage}/${parsedRow.idx}.json`, rowJsonString);
-            logger.debug(`convert ${parsedRow.idx}'s row to json [OK]`);
+            message = logger.getLoggerFormat(
+                "SUCCESS",
+                {
+                    "ROW": parsedRow.idx,
+                },
+                `CONVERT ${parsedRow.idx} ROWS FROM brdaily`
+            );
+            wafBlackIpLogger.convert.debug(message);
         } catch (error) {
-            console.log(error);
-            logger.debug(`convert ${parsedRow.idx}'s row to json [FAIL]`);
-            // pushq action
-            process.exit();
+            message = logger.getLoggerFormat(
+                "FAIL",
+                {
+                    "ROW": parsedRow.idx,
+                },
+                `GET ${rows.length} ROWS FROM brdaily`
+            );
+            wafBlackIpLogger.convert.error(`convert ${parsedRow.idx}'s row to json [FAIL]`);
+            pushq.sendMessage(`cloudbric', '[TEST] error convert ${parsedRow.idx}'s row`);
+            throw(error);
         }
     });
+    await logger.shutdown();
+    return true;
 }
 
-fromJSONtoIpfs = async () => {
-     
+async function test() {
+    let rows = null;
+    try {
+        rows = await fetchRows(fetchQuery);
+    } catch (error) {
+        console.log(error);
+        process.exit(1);
+    }
+    try {
+        await convertRowToJSON(rows);
+    } catch (error) {
+        console.log(error);
+        process.exit(1);
+    }
 }
+test();
