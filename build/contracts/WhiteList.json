@@ -2921,12 +2921,12 @@
         }
       },
       "links": {},
-      "address": "0x856F54FA5A92914B94E8F4D748e5A9B28240d398",
-      "transactionHash": "0x665b306a840fd53cc7ffed162c4f8c42db031e113c1de01de1a2069bb44a14bc"
+      "address": "0xf20faFf42A91A0DE27064a03f888071E3F026796",
+      "transactionHash": "0xb3bf4902ce9e34e55e038c7547efc1b7b396beae4ae6f1bd467071ca8ccc6aa7"
     }
   },
   "schemaVersion": "3.0.16",
-  "updatedAt": "2019-10-08T11:40:07.338Z",
+  "updatedAt": "2019-10-08T16:39:06.803Z",
   "devdoc": {
     "methods": {
       "renounceOwnership()": {
