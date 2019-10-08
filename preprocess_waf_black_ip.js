@@ -4,24 +4,22 @@ const path = require('path');
 // direcotry path setup
 const appDir = path.dirname('index.js');
 
-const labsdb = require(`${appDir}/db/labsdb`);
-const br = new labsdb('br');
+const dbPromiseInterface = require(`${appDir}/db/db_promise`);
+const br = new dbPromiseInterface('br');
 const dataStorage = `${appDir}/data/waf_black_ip`;
 
 const logger = require(`${appDir}/helper/logger`);
+const preprocess = require(`${appDir}/helper/preprocess`);
+
 const wafBlackIpLogger = logger.getLogger("wafBlackIp");
 
 const queryBuilder = require(`${appDir}/private/.query_builder`);
 
 const pushq = require(`${appDir}/helper/pushq`);
 
-const INITIAL_INSERTED_IDX = '210511986';
+const INITIAL_TO_BE_INSERTED_IDX = 210511986;
 
-// read log and get last inserted date
-const lastInsertedIdx = INITIAL_INSERTED_IDX;
-const fetchQuery = queryBuilder.getFetchQuery(lastInsertedIdx, 'brdaily', 100);
-
-async function fetchRows(query) {
+async function fetchRows(query, startIdx) {
     let rows = null;
     try {
         rows = await br.query(query);
@@ -30,7 +28,7 @@ async function fetchRows(query) {
             {
                 "TABLE": "brdaily",
                 "FETCH_LENGTH": rows.length,
-                "FROM_IDX": lastInsertedIdx
+                "FROM_IDX": startIdx 
             },
             `GET ${rows.length} ROWS FROM brdaily`
         );
@@ -41,13 +39,13 @@ async function fetchRows(query) {
             "FAIL",
             {
                 "TABLE": "brdaily",
-                "FROM_IDX": lastInsertedIdx
+                "FROM_IDX": startIdx 
             },
             `GET ${rows.length} ROWS FROM brdaily`
         );
         wafBlackIpLogger.fetch.error(message);
         await logger.shutdown();
-        pushq.sendMessage(`cloudbric', '[TEST] error fetch row from ${lastInsertedIdx}`);
+        pushq.sendMessage(`cloudbric', '[TEST] error fetch row from ${startIdx}`);
         throw(error);
     }
 }
@@ -83,8 +81,17 @@ async function convertRowToJSON(rows) {
     return true;
 }
 
-async function test() {
+async function routine() {
     let rows = null;
+    let startIdx = null;
+    try {
+        const lastInsertedIdx = await preprocess.getLastInsertedIdx();
+        startIdx = lastInsertedIdx + 1;
+    } catch (error) { 
+        console.log(error);
+    }
+    const fetchQuery = queryBuilder.getFetchQuery(startIdx, 'brdaily', 1000);
+
     try {
         rows = await fetchRows(fetchQuery);
     } catch (error) {
@@ -97,5 +104,6 @@ async function test() {
         console.log(error);
         process.exit(1);
     }
+    process.exit(1);
 }
-test();
+routine();

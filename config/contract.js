@@ -6,18 +6,18 @@ const caver = caverConfig.caver;
 const deployedMetadataOfWhiteList = fs.readFileSync('deployedMetadataOfWhiteList');
 const deployedAddressOfWhiteList = fs.readFileSync('deployedAddressOfWhiteList', 'utf-8');
 
-const deployedMetadataOfIpfsBridge = fs.readFileSync('deployedMetadataOfIpfsBridge');
-const deployedAddressOfIpfsBridge = fs.readFileSync('deployedAddressOfIpfsBridge', 'utf-8');
+const deployedMetadataOfWafBlackIpStorage = fs.readFileSync('deployedMetadataOfWafBlackIpStorage');
+const deployedAddressOfWafBlackIpStorage = fs.readFileSync('deployedAddressOfWafBlackIpStorage', 'utf-8');
 
 const abiOfWhiteList = JSON.parse(deployedMetadataOfWhiteList).abi;
-const abiOfIpfsBridge = JSON.parse(deployedMetadataOfIpfsBridge).abi;
+const abiOfWafBlackIpStorage = JSON.parse(deployedMetadataOfWafBlackIpStorage).abi;
 
 const whiteList = new caver.klay.Contract(abiOfWhiteList, deployedAddressOfWhiteList);
-const cloudbricIpfsBridge = new caver.klay.Contract(abiOfIpfsBridge, deployedAddressOfIpfsBridge); 
+const cloudbricWafBlackIpStorage = new caver.klay.Contract(abiOfWafBlackIpStorage, deployedAddressOfWafBlackIpStorage); 
 
 module.exports = {
     addressOfWhiteList: deployedAddressOfWhiteList,
     whiteList: whiteList,
-    addressOfIpfsBridge: deployedAddressOfIpfsBridge,
-    cloudbricIpfsBridge: cloudbricIpfsBridge
+    addressOfWafBlackIpStorage: deployedAddressOfWafBlackIpStorage,
+    cloudbricWafBlackIpStorage: cloudbricWafBlackIpStorage
 }

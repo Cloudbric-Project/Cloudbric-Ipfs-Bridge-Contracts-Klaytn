@@ -9,8 +9,9 @@ const vault = JSON.parse(caverSecret);
 
 const Caver = require('caver-js');
 
-const caver = new Caver(vault.local.URL);
+const caver = new Caver(vault.cypress.URL);
 
 module.exports = {
-    caver: caver
+    caver: caver,
+    vault: vault
 }

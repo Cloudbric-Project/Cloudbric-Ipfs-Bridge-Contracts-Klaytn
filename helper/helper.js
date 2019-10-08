@@ -20,7 +20,7 @@ function stringToBytes32 (stringData) {
  * @param {Stirng} bytes32
  * @return {String} ascii 
  */
-function bytes32ToString(bytes32) {
+function bytes32ToString (bytes32) {
     ascii = caver.utils.hexToAscii(bytes32);
     return ascii;
 }
@@ -30,7 +30,7 @@ function bytes32ToString(bytes32) {
  * @param {Object} multiHash
  * @return {String} ipfsHash
  */
-function multihashToIpfsHash(multiHash) {
+function multihashToIpfsHash (multiHash) {
     const decodedHexString = multiHash.hashFunction + multiHash.size + multiHash.hash;
     const bytes = Buffer.from(decodedHexString, 'hex');
     const ipfsHash = bs58.encode(bytes);
@@ -43,7 +43,7 @@ function multihashToIpfsHash(multiHash) {
  * @param {String} ipfsHash 
  * @return {Object} multiHash
  */
-function ipfsHashToMultihash(ipfsHash) {
+function ipfsHashToMultihash (ipfsHash) {
     const decodedHexString = bs58.decode(ipfsHash).toString('hex');
     
     return {
@@ -73,7 +73,7 @@ function createRandomHexString (length) {
  * @param {Number} idx
  * @return {Object} dummy dataset.
  */
-function createDummy(idx) {
+function createDummy (idx) {
     return {
         idxWafBlakcIpList: idx,
         wafBlackIpHash: createRandomHexString(30),
@@ -89,8 +89,8 @@ function createDummy(idx) {
  */
 function encodeDataSet(dataSet) {
     return {
-        encodedIdxWafBlackIpList: stringToBytes32(dataSet.idxWafBlakcIpList),
-        encodedWafBlackIpHash: stringToBytes32(dataSet.wafBlackIpHash),
+        encodedIdxWafBlackIpList: stringToBytes32(String(dataSet.idxWafBlakcIpList)),
+        encodedWafBlackIpHash: '0x' + dataSet.wafBlackIpHash,
         encodedHashFunction: caver.klay.abi.encodeParameter('uint8', dataSet.hashFunction),
         encodedSize: caver.klay.abi.encodeParameter('uint8', dataSet.size),
     }

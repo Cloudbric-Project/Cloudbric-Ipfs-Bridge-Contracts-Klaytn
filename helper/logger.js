@@ -26,6 +26,14 @@ log4js.configure({
                 separator: ',',
             }
         },
+        klaytnAccount: { 
+            type: 'file',
+            filename: `${logStorage}/account/${todayYmd}.log`,
+            layout: {
+                type: 'json',
+                separator: ',',
+            }
+        },
         fetchWafBlackIp: { 
             type: 'file',
             filename: `${logStorage}/waf_black_ip/fetch_rows/${todayYmd}.log`,
@@ -159,6 +167,9 @@ log4js.configure({
         default: {
             appenders: ['system'], level: 'debug'
         },
+        klaytnAccount: {
+            appenders: ['klaytnAccount'], level: 'debug'
+        },
         fetchWafBlackIp: {
             appenders: ['fetchWafBlackIp'], level: 'debug' 
         },
@@ -226,7 +237,12 @@ function getLoggerFormat(status, metadata, message) {
 }
 
 function getLogger(type) {
-    if (type == "wafBlackIp") {
+    if  (type == "klaytn") {
+        const klaytnLogger = {
+            account: log4js.getLogger('klaytnAccount') 
+        }
+        return klaytnLogger;
+    } else if (type == "wafBlackIp") {
         const wafBlackIpLogger = {
             fetch: log4js.getLogger('fetchWafBlackIp'),
             convert: log4js.getLogger('convertWafBlackIp'),
