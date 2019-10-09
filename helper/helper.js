@@ -5,6 +5,8 @@ const caver = caverConfig.caver;
 
 /**
  * create Solidity data type bytes32 from Javascript String data type.
+ * E.g. input: '210511986'
+ * output: '0x3231303531313938360000000000000000000000000000000000000000000000'
  * @method stringToBytes32
  * @param {String} stringData
  * @return {String} bytes32
@@ -17,6 +19,8 @@ function stringToBytes32 (stringData) {
 
 /**
  * convert bytes32 to Javascript String data type.
+ * E.g. input: '0x3231303531313938360000000000000000000000000000000000000000000000'
+ * output: '210511986'
  * @param {Stirng} bytes32
  * @return {String} ascii 
  */
@@ -26,7 +30,13 @@ function bytes32ToString (bytes32) {
 }
 
 /**
- * conver multi hash in hexadecimal form to ipfs hash.
+ * conver multihash in hexadecimal form to ipfs hash.
+ * E.g. input: {
+ *   hashFunction: 12
+ *   size: 20
+ *   hash: 29bd1aeb9d743a6fd89322b25e0f45a4d851af9c359c74b3eb4a7a72877b1da4 
+ * }
+ * output: QmR9afrWU3bPzztUUstrf42EuCd74U3iNZo3MoGrjM9o3y 
  * @param {Object} multiHash
  * @return {String} ipfsHash
  */
@@ -39,7 +49,13 @@ function multihashToIpfsHash (multiHash) {
 }
 
 /**
- * conver ipfs hash to multi hash form.
+ * convert ipfs hash to multi hash form.
+ * E.g. input: QmR9afrWU3bPzztUUstrf42EuCd74U3iNZo3MoGrjM9o3y
+ * output: {
+ *   hashFunction: 12
+ *   size: 20
+ *   hash: 29bd1aeb9d743a6fd89322b25e0f45a4d851af9c359c74b3eb4a7a72877b1da4
+ * }
  * @param {String} ipfsHash 
  * @return {Object} multiHash
  */
@@ -75,24 +91,60 @@ function createRandomHexString (length) {
  */
 function createDummy (idx) {
     return {
-        idxWafBlakcIpList: idx,
-        wafBlackIpHash: createRandomHexString(30),
-        hashFunction: '0x12',
-        size: '0x20'
+        clbIndex: 210511986 + idx,
+        wafBlackIpHash: createRandomHexString(64),
+        hashFunction: 12,
+        size: 20
     }
 }
 
 /**
  * encode dataset.
+ * E.g. input: {
+ *   clbIndex: 210511986,
+ *   wafBlackIpHash: '29bd1aeb9d743a6fd89322b25e0f45a4d851af9c359c74b3eb4a7a72877b1da4',
+ *   hashFunction: 12,
+ *   size: 20
+ * }
+ * output: {
+ *   encodedClbIndex: '0x3231303531313938360000000000000000000000000000000000000000000000,'
+ *   encodedWafBlackIpHash: '0x29bd1aeb9d743a6fd89322b25e0f45a4d851af9c359c74b3eb4a7a72877b1da4',
+ *   encodedhHashFunction: '0x000000000000000000000000000000000000000000000000000000000000000c',
+ *   encodedSize: '0x0000000000000000000000000000000000000000000000000000000000000014'
+ * }
  * @param {Object} dataSet
- * @return {Object} encoded dataset
+ * @return {Object} encodedDataset
  */
-function encodeDataSet(dataSet) {
+function encodeDataSet (dataSet) {
     return {
-        encodedIdxWafBlackIpList: stringToBytes32(String(dataSet.idxWafBlakcIpList)),
+        encodedClbIndex: stringToBytes32(String(dataSet.clbIndex)),
         encodedWafBlackIpHash: '0x' + dataSet.wafBlackIpHash,
         encodedHashFunction: caver.klay.abi.encodeParameter('uint8', dataSet.hashFunction),
         encodedSize: caver.klay.abi.encodeParameter('uint8', dataSet.size),
+    }
+}
+
+/** 
+ * decode return value(multihash) of getWafBlackIp.
+ * E.g. input: {
+ *   hash: '0x61b95cd325199a251d4cc03f2a4d13d6fee2b4e35785c4a62a5945cacf706b9f',
+ *   hashFunction: <BN: c>,
+ *   size: <BN: 14> 
+ * }
+ * output: {
+ *   docdedHash: '61b95cd325199a251d4cc03f2a4d13d6fee2b4e35785c4a62a5945cacf706b9f',
+ *   decodedHashFunction: '12'
+ *   decodedSize: '20'
+ * }
+ * @param {Object} value returned by getWafBlackIp 
+ * @return {Object} decoded multihash 
+ */
+function decodeMultihash (multihash) {
+    console.log(multihash);
+    return {
+        hash: multihash.hash.slice(2),
+        hashFunction: multihash.hash_function.toString(),
+        size: multihash.size.toString()
     }
 }
 
@@ -147,5 +199,6 @@ module.exports = {
     createRandomHexString: createRandomHexString,
     createDummy: createDummy,
     encodeDataSet: encodeDataSet,
+    decodeMultihash, decodeMultihash,
     feeDelegatedSmartContractExecute: feeDelegatedSmartContractExecute
 }
