@@ -4,12 +4,15 @@ const helper = require('../helper/helper');
 const caver = caverConfig.caver;
 
 const WhiteList = artifacts.require("WhiteList.sol");
-const CloudbricIpfsBridge = artifacts.require("CloudbricIpfsBridge.sol");
+const CloudbricWafBlackIpStorage = artifacts.require("CloudbricWafBlackIpStorage.sol");
 
-let cloudbricIpfsBridge = null;
+let cloudbricWafBlackIpStorage = null;
 let whiteList = null;
 
 let whiteSpace  = '     ';
+
+const DATA_SIZE = 10;
+const INITIAL_TO_BE_INSERTED_IDX = 210511986;
 
 let owner = null;
 let alice = null;
@@ -26,7 +29,7 @@ contract("Setup before test begin", async accounts => {
         david = accounts[4];
 
         whiteList = await WhiteList.deployed();
-        cloudbricIpfsBridge = await CloudbricIpfsBridge.deployed();
+        cloudbricWafBlackIpStorage = await CloudbricWafBlackIpStorage.deployed();
     });
 
     it("owner of WhiteList must be set correctly", async () => {
@@ -34,13 +37,13 @@ contract("Setup before test begin", async accounts => {
         assert.equal(ownerOfWhiteList, owner);
     });
 
-    it("owner of CloudbricIpfsBridge must be set correctly", async () => {
-        const ownerOfCloudbricIpfsBridge = await cloudbricIpfsBridge.owner.call();
-        assert.equal(ownerOfCloudbricIpfsBridge, owner); 
+    it("owner of CloudbricWafBlackIpStorage must be set correctly", async () => {
+        const ownerOfCloudbricWafBlackIpStorage = await cloudbricWafBlackIpStorage.owner.call();
+        assert.equal(ownerOfCloudbricWafBlackIpStorage, owner); 
     });
 
-    it("WhiteList must be included in CloudbricIpfsBridge", async () => {
-        const addressOfWhiteList = await cloudbricIpfsBridge.whiteList.call();
+    it("WhiteList must be included in CloudbricWafBlackIpStorage", async () => {
+        const addressOfWhiteList = await cloudbricWafBlackIpStorage.whiteList.call();
         assert.equal(whiteList.address, addressOfWhiteList);
     });
 });
@@ -120,73 +123,174 @@ contract("WhiteList", async accounts => {
     });
 });
 
-contract("Cloudbric Ipfs Bridge", async accounts => {
+contract("CloudbricWafBlackIpStorage Unit Test", async accounts => {
     let dummy = null;
     let encodedDummy = null;
-    
-    before("setup dummy dataset", () => {
-        dummy = helper.createDummy(0);
+    before("setup dummy data", async () => {
+        dummy = helper.createDummy(INITIAL_TO_BE_INSERTED_IDX);
         encodedDummy = helper.encodeDataSet(dummy);
     });
-
-    describe("WafBlackIp", () => {
-        it("owner try to add wafBlackIp", async () => {
-            try {
-                await cloudbricIpfsBridge.addWafBlackIp(
-                    encodedDummy.encodedIdxWafBlackIpList,
-                    encodedDummy.encodedWafBlackIpHash,
-                    encodedDummy.encodedHashFunction,
-                    encodedDummy.encodedSize,
-                    {from: owner}
-                );
-                assert.ok(true);
-            } catch (error) {
-                assert.fail(error);
-            }
-        });
-
-        it("alice try to add wafBlackIp but failed", async () => {
-            try {
-                await cloudbricIpfsBridge.addWafBlackIp(
-                    encodedDummy.encodedIdxWafBlackIpList,
-                    encodedDummy.encodedWafBlackIpHash,
-                    encodedDummy.encodedHashFunction,
-                    encodedDummy.encodedSize,
-                    {from: alice}
-                );
-            } catch (error) {
-                assert.ok(true);
-            }
-        });
-
-        it("david try to add wafBlackIp but failed", async () => {
-            try {
-                await cloudbricIpfsBridge.addWafBlackIp(
-                    encodedDummy.encodedIdxWafBlackIpList,
-                    encodedDummy.encodedWafBlackIpHash,
-                    encodedDummy.encodedHashFunction,
-                    encodedDummy.encodedSize,
-                    {from: david}
-                );
-                assert.fail(error);
-            } catch (error) {
-                assert.ok(true);
-            }
-        })
-
-        it("get wafBlackIp at given clbIndex", async () => {
-            try {
-                let wafBlackIp = await cloudbricIpfsBridge.getWafBlackIpAtClbIndex(
-                    encodedDummy.encodedIdxWafBlackIpList
-                );
-                assert.ok(true);
-            } catch (error) {
-                assert.fail(error);
-            }
-        });
+    it("owner try to add wafBlackIp", async () => {
+        try {
+            await cloudbricWafBlackIpStorage.addWafBlackIp(
+                encodedDummy.encodedClbIndex,
+                encodedDummy.encodedWafBlackIpHash,
+                encodedDummy.encodedHashFunction,
+                encodedDummy.encodedSize,
+                {from: owner}
+            );
+            assert.ok(true);
+        } catch (error) {
+            assert.fail(error);
+        }
     });
 
-    describe("HackerWallet", () => {
+    it("owner try to add same data but failed", async () => {
+        try {
+            await cloudbricWafBlackIpStorage.addWafBlackIp(
+                encodedDummy.encodedClbIndex,
+                encodedDummy.encodedWafBlackIpHash,
+                encodedDummy.encodedHashFunction,
+                encodedDummy.encodedSize,
+                {from: owner}
+            );
+            assert.fail("error");
+        } catch (error) {
+            assert.ok(true);
+        }
+    });
 
+    it("alice try to add wafBlackIp but failed", async () => {
+        try {
+            await cloudbricWafBlackIpStorage.addWafBlackIp(
+                encodedDummy.encodedClbIndex,
+                encodedDummy.encodedWafBlackIpHash,
+                encodedDummy.encodedHashFunction,
+                encodedDummy.encodedSize,
+                {from: alice}
+            );
+            assert.fail("error");
+        } catch (error) {
+            assert.ok(true);
+        }
+    });
+
+    it("david try to add wafBlackIp but failed", async () => {
+        try {
+            await cloudbricWafBlackIpStorage.addWafBlackIp(
+                encodedDummy.encodedClbIndex,
+                encodedDummy.encodedWafBlackIpHash,
+                encodedDummy.encodedHashFunction,
+                encodedDummy.encodedSize,
+                {from: david}
+            );
+            assert.fail("error");
+        } catch (error) {
+            assert.ok(true);
+        }
+    });
+
+    it("get wafBlackIp at given clbIndex", async () => {
+        try {
+            const encodedMultihash = await cloudbricWafBlackIpStorage.getWafBlackIpAtClbIndex(
+                encodedDummy.encodedClbIndex
+            );
+            const decodedMultihash = helper.decodeMultihash(encodedMultihash);
+            const ipfsHash = helper.multihashToIpfsHash(decodedMultihash);
+            assert.ok(true);
+        } catch (error) {
+            assert.fail(error);
+        }
+    });
+
+    it("get wafBlackIp at given index", async () => {
+        try {
+            const encodedMultihash = await cloudbricWafBlackIpStorage.getWafBlackIpAtIndex(
+                0
+            );
+            const decodedMultihash = helper.decodeMultihash(encodedMultihash);
+            const ipfsHash = helper.multihashToIpfsHash(decodedMultihash);
+            assert.ok(true);
+        } catch (error) {
+            assert.fail(error);
+        }
+    });
+});
+
+contract("CloudbricWafBlackIpStorage Batch Test", () => {
+    let encodedDummySet = []
+    before("setup dummy data", () => {
+        for (let i = 0; i < DATA_SIZE; i++) {
+            let dummy = helper.createDummy(INITIAL_TO_BE_INSERTED_IDX + i + 1);
+            let encodedDummy = helper.encodeDataSet(dummy);
+            encodedDummySet.push(encodedDummy);
+        }
+    });
+    it("david try to add data set but failed", async () => {
+        for (let i = 0; i < DATA_SIZE - 5; i++) {
+            try {
+                await cloudbricWafBlackIpStorage.addWafBlackIp(
+                    encodedDummySet[i].encodedClbIndex,
+                    encodedDummySet[i].encodedWafBlackIpHash,
+                    encodedDummySet[i].encodedHashFunction,
+                    encodedDummySet[i].encodedSize,
+                    {from: david}
+                );
+                assert.fail("error");
+            } catch (error) {
+                assert.ok(true);
+                break;
+            }
+        }
+    });
+
+    it("bob try to add data set", async () => {
+        await whiteList.addWhiteList(bob, {from: owner});
+        for (let i = 0; i < DATA_SIZE; i++) {
+            try {
+                await cloudbricWafBlackIpStorage.addWafBlackIp(
+                    encodedDummySet[i].encodedClbIndex,
+                    encodedDummySet[i].encodedWafBlackIpHash,
+                    encodedDummySet[i].encodedHashFunction,
+                    encodedDummySet[i].encodedSize,
+                    {from: bob}
+                );
+                assert.ok("error");
+            } catch (error) {
+                assert.false(error);
+                break;
+            }
+        }
+    });
+
+    it("get added data set by bob using index", async () => {
+        let wafBlackIpListSize = await cloudbricWafBlackIpStorage.wafBlackIpListSize();
+        for (let i = 0; i < wafBlackIpListSize; i++) {
+            try {
+                let encodedMultihash = await cloudbricWafBlackIpStorage.getWafBlackIpAtIndex(
+                    i
+                );
+                console.log(helper.decodeMultihash(encodedMultihash));
+                assert.ok(true);
+            } catch (error) {
+                assert.fail(error);
+            }
+        }
+    });
+
+    it("get added data set by bob using clbIndex", async () => {
+        let wafBlackIpListSize = await cloudbricWafBlackIpStorage.wafBlackIpListSize();
+        for (let i = 0; i < wafBlackIpListSize; i++) {
+            try {
+                let encodedMultihash = await cloudbricWafBlackIpStorage.getWafBlackIpAtClbIndex(
+                    encodedDummySet[i].encodedClbIndex
+                );
+                console.log(helper.decodeMultihash(encodedMultihash));
+            }
+            catch (error) {
+                    assert.fail(error);
+                    break;
+            }
+        }
     });
 });
