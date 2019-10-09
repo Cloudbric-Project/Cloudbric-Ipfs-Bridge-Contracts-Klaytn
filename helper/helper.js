@@ -30,7 +30,7 @@ function bytes32ToString (bytes32) {
 }
 
 /**
- * conver multihash in hexadecimal form to ipfs hash.
+ * conver multihash in hexadecimal form to ipfshash.
  * E.g. input: {
  *   hashFunction: 12
  *   size: 20
@@ -152,14 +152,15 @@ function decodeMultihash (multihash) {
  * run fee delegated smart contract execute.
  * @param {String} fromAddress
  * @param {String} fromPrivateKey
- * @param {Object} delegate
+ * @param {String} address of smart contract
+ * @param {Object} feePayer 
  * @param {Object} abiOfMethod
  */
 async function feeDelegatedSmartContractExecute (
     fromAddress, 
     fromPrivateKey,
     to, 
-    delegate, 
+    feePayer, 
     abiOfMethod
 ) {
     let feeDelegatedSmartContractObject = {
@@ -179,11 +180,12 @@ async function feeDelegatedSmartContractExecute (
     } catch (error) {
         throw Error(error);
     }
+
     let receipt = null;
     try {
         receipt = await caver.klay.sendTransaction({
             senderRawTransaction: rlpEncodedTransaction.rawTransaction,
-            feePayer: delegate.address,
+            feePayer: feePayer.address
         });
     } catch (error) {
         throw Error(error);

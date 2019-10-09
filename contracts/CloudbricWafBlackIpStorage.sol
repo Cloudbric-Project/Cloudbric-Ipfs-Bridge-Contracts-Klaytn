@@ -10,13 +10,13 @@ import "./WhiteList.sol";
  */
 contract CloudbricWafBlackIpStorage is Ownable {
     /**
-    * @notice This contract uses Multihash Identifier which is used by
-    * Ipfs protocol.
+    * @notice This contract uses Multihash Identifier which is used by IPFS.
     */
     struct Multihash {
         bytes32 hash;
         uint8 hashFunction;
         uint8 size;
+        bool isExist;
     }
 
     /**
@@ -29,10 +29,18 @@ contract CloudbricWafBlackIpStorage is Ownable {
 
     event AddWafBlackIp(address indexed from, bytes32 clbIndex, bytes32 hash, uint8 hashFunction, uint8 size);
 
-    modifier onlyWhiteListed(address addr) {
+    modifier onlyWhiteListed(address _addr) {
         require(
-            whiteList.isWhiteListed(addr),
+            whiteList.isWhiteListed(_addr),
             "Only white listed account can add data"
+        );
+        _;
+    }
+
+    modifier onlyUniqueClbIndexAllowed(bytes32 _clbIndex) {
+        require(
+            wafBlackIpList[_clbIndex].isExist == false,
+            "Only unique clbIndex can be added"
         );
         _;
     }
@@ -59,7 +67,7 @@ contract CloudbricWafBlackIpStorage is Ownable {
     function getWafBlackIpAtIndex(uint _index)
         public
         view
-        returns (bytes32 hash, uint8 hash_funciton, uint8 size)
+        returns (bytes32 hash, uint8 hash_function, uint8 size)
     {
         bytes32 wafBlackIpIdx = wbiLookUpTable[_index];
         require(
@@ -78,7 +86,7 @@ contract CloudbricWafBlackIpStorage is Ownable {
     function getWafBlackIpAtClbIndex(bytes32 _clbIndex)
         public
         view
-        returns (bytes32 hash, uint8 hash_funciton, uint8 size)
+        returns (bytes32 hash, uint8 hash_function, uint8 size)
     {
         Multihash storage multihash = wafBlackIpList[_clbIndex];
         return (multihash.hash, multihash.hashFunction, multihash.size);
@@ -97,10 +105,11 @@ contract CloudbricWafBlackIpStorage is Ownable {
     )
         public
         onlyWhiteListed(msg.sender)
+        onlyUniqueClbIndexAllowed(_clbIndex)
         returns (bool)
     {
         wbiLookUpTable.push(_clbIndex);
-        wafBlackIpList[_clbIndex] = Multihash(_hash, _hashFunction, _size);
+        wafBlackIpList[_clbIndex] = Multihash(_hash, _hashFunction, _size, true);
         emit AddWafBlackIp(msg.sender, _clbIndex, _hash, _hashFunction, _size);
         return true;
     }
