@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-
 // direcotry path setup
 const appDir = path.dirname('index.js');
 
