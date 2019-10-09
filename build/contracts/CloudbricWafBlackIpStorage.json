@@ -5635,12 +5635,12 @@
         }
       },
       "links": {},
-      "address": "0xE4b67a987ed21eBeF173f2A75cBa8052Fb41DE74",
-      "transactionHash": "0x190ab7b8ce40d8bcb1242dbb02cc66ba2e33c760e9d9651deba8003967c0f49f"
+      "address": "0x9775C509b82DfD3C60f6FFF7A4d3f4985ebA642A",
+      "transactionHash": "0xed2cb848ed23e8bfd503db86b3d04eb989629a90bc1e6868fcd971bb77aa06cb"
     }
   },
   "schemaVersion": "3.0.16",
-  "updatedAt": "2019-10-09T17:29:58.352Z",
+  "updatedAt": "2019-10-09T17:58:49.932Z",
   "devdoc": {
     "methods": {
       "addWafBlackIp(bytes32,bytes32,uint8,uint8)": {
