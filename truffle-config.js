@@ -1,21 +1,23 @@
 const HDWalletProvider = require('truffle-hdwallet-provider-klaytn');
-const fs = require('fs');
 
-const secret = fs.readFileSync("./private/.caver.json").toString();
-const parsedSecret = JSON.parse(secret);
+const path = require('path');
+// direcotry path setup
+const appDir = path.dirname('index.js');
+const caverConfig = require(`${appDir}/config/caver`);
+const vault = caverConfig.vault;
 
 const LOCAL_NETWORK_ID = '1001';
-const LOCAL_DEPLOYER = parsedSecret.local.accounts.deployer;
-const LOCAL_URL = parsedSecret.local.URL;
+const LOCAL_DEPLOYER = vault.local.accounts.deployer;
+const LOCAL_URL = vault.local.URL;
 
 const BAOBAB_NETWORK_ID = '1001';
-const BAOBAB_DEPLOYER = parsedSecret.baobab.accounts.deployer;
-const BAOBAB_URL = parsedSecret.baobab.URL;
+const BAOBAB_DEPLOYER = vault.baobab.accounts.deployer;
+const BAOBAB_URL = vault.baobab.URL;
 
 const CYPRESS_NETWORK_ID = '8217';
-const CYPRESS_DEPLOYER = parsedSecret.cypress.accounts.deployer;
-const CYPRESS_URL = parsedSecret.cypress.URL;
-const CYPRESS_PUBLIC_EN_URL = parsedSecret.cypressPublicEN.URL;
+const CYPRESS_DEPLOYER = vault.cypress.accounts.deployer;
+const CYPRESS_URL = vault.cypress.URL;
+const CYPRESS_PUBLIC_EN_URL = vault.cypressPublicEN.URL;
 
 module.exports = {
   networks: {
