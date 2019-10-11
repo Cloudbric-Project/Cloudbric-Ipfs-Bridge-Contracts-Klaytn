@@ -155,6 +155,7 @@ function decodeMultihash (multihash) {
  * @param {String} address of smart contract
  * @param {Object} feePayer 
  * @param {Object} abiOfMethod
+ * @return {Object} receipt of transaction 
  */
 async function feeDelegatedSmartContractExecute (
     fromAddress, 
