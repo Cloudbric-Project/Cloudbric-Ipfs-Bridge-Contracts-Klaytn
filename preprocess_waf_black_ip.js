@@ -13,6 +13,7 @@ const pushq = require(`./helper/pushq`);
 async function fetchRows(fetchQueryFromStartingIdx) {
     let rows = null;
     try {
+        console.log(`fetch rows from start idx`);
         rows = await schemaBr.query(fetchQueryFromStartingIdx);
         return rows;
     } catch (error) {
@@ -22,6 +23,7 @@ async function fetchRows(fetchQueryFromStartingIdx) {
 }
 
 async function convertRowToJSON(rows) {
+    console.log(`convert Row To JSON is ended`);
     rows.forEach((row) => {
         let rowJsonString = JSON.stringify(row);
         let parsedRow = JSON.parse(rowJsonString);
@@ -32,6 +34,7 @@ async function convertRowToJSON(rows) {
             throw(error);
         }
     });
+    console.log(`convert Row To JSON is ended`);
     return true;
 }
 
@@ -48,7 +51,7 @@ async function main() {
     } catch (error) { 
         console.log(error);
     }
-    const size = 10000;
+    const size = process.argv[2];
 
     const fetchQueryFromStartingIdx = 
         `SELECT * FROM brdaily \
