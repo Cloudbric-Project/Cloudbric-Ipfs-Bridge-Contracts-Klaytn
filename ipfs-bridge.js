@@ -25,24 +25,31 @@ async function wafBlackIpInsert(startIdx, limit) {
         const bufferedWafBlackIp = Buffer.from(wafBlackIpJson);
         
         // encrypt message with some key
-        
+       
+        let result = null;
+        let wafBlackIpAdded = null;
         try {
-            const result = await ipfs.add(bufferedWafBlackIp, {pin: true});
-            const wafBlackIpAdded = result[0];
+            result = await ipfs.add(bufferedWafBlackIp, {pin: true});
+            wafBlackIpAdded = result[0];
 
-            let uploaded_date = new Date().toISOString(); // UTC format
-            uploaded_date = uploaded_date.replace(/T/, ' ').replace(/\..+/, '');
+        } catch (error) {
+            console.log(error);
+            process.exit(1);
+        }
+        console.log(`${idx} IS UPLOADED TO IPFS`);
 
-            console.log("INSERT INTO...");
-            let stmt = `INSERT INTO brdaily_uploaded_log (brdaily_idx, ipfs_cid, ipfs_uploaded_date) VALUES(?,?,?)`;
-            let values = [idx, wafBlackIpAdded.hash, uploaded_date];
+        let uploaded_date = new Date().toISOString(); // UTC format
+        uploaded_date = uploaded_date.replace(/T/, ' ').replace(/\..+/, '');
+
+        const stmt = `INSERT INTO brdaily_uploaded_log (brdaily_idx, ipfs_cid, ipfs_uploaded_date) VALUES(?,?,?)`;
+        const values = [idx, wafBlackIpAdded.hash, uploaded_date];
+        try {
             await schemaLog.query(stmt, values);
-
-            const multihash = helper.ipfsHashToMultihash(wafBlackIpAdded.hash);
             // delete uploaded file for storage issue.
             fs.unlinkSync(fileName);
         } catch (error) { 
             console.log(error);
+            process.exit(1);
         }
     }
 }
@@ -63,7 +70,7 @@ async function routine() {
     const lastInsertedIdx = result[0].brdaily_idx;
     const startIndex = lastInsertedIdx + 1;
     console.log(`FROM brdaily_idx ${startIndex} START INSERT IPFS DATA AND UPDATE DB`);
-    await wafBlackIpInsert(startIndex, 10000);
+    await wafBlackIpInsert(startIndex, process.argv[2]);
     console.log("END UPLOAD IPFS DATA AND INSERT DB");
     process.exit(1);
 }
@@ -76,28 +83,34 @@ async function failover() {
 
         const wafBlackIpJson = fs.readFileSync(fileName).toString();
         const bufferedWafBlackIp = Buffer.from(wafBlackIpJson);
+        let result = null;
+        let wafBlackIpAdded = null;
 
         try {
-            const result = await ipfs.add(bufferedWafBlackIp, {pin: true});
-            const wafBlackIpAdded = result[0];
+            result = await ipfs.add(bufferedWafBlackIp, {pin: true});
+            wafBlackIpAdded = result[0];
+        } catch (error) {
+            console.log(error);
+            process.exit(1);
+        }
+        console.log(`${idx} IS UPLOADED TO IPFS`);
+        let uploaded_date = new Date().toISOString(); // UTC format
+        uploaded_date = uploaded_date.replace(/T/, ' ').replace(/\..+/, '');
 
-            let uploaded_date = new Date().toISOString(); // UTC format
-            uploaded_date = uploaded_date.replace(/T/, ' ').replace(/\..+/, '');
-
-            console.log("INSERT INTO...");
-            let stmt = `INSERT INTO brdaily_uploaded_log (brdaily_idx, ipfs_cid, ipfs_uploaded_date) VALUES(?,?,?)`;
-            let values = [idx, wafBlackIpAdded.hash, uploaded_date];
+        let stmt = `INSERT INTO brdaily_uploaded_log (brdaily_idx, ipfs_cid, ipfs_uploaded_date) VALUES(?,?,?)`;
+        let values = [idx, wafBlackIpAdded.hash, uploaded_date];
+        try {
             await schemaLog.query(stmt, values);
-
+            console.log("INSERT DB SUCCESS");
             const multihash = helper.ipfsHashToMultihash(wafBlackIpAdded.hash);
             // delete uploaded file for storage issue.
             fs.unlinkSync(fileName);
         } catch (error) {
             console.log(error);
+            process.exit(1);
         }
     }
-    console.log(failedList);
-    
+    console.log("failover ended");
 }
 //routine();
 failover();
