@@ -1,19 +1,18 @@
 
 const caverConfig = require('../config/caver');
-const secret = require('../config/secret');
 const contract = require('../config/contract');
 
-const vault = secret.vault;
 const caver = caverConfig.caver;
+const vault = caverConfig.vault;
 
-const cloudbricIpfsBridge = contract.cloudbricIpfsBridge;
+const cloudbricWafBlackIpStorage = contract.cloudbricWafBlackIpStorage;
 
-cloudbricIpfsBridge.getPastEvents('AddWafBlackIp', {
-    filter: {from: vault.local.accounts.alice.address},
-    fromBlock: 8360000,
-    toBlock: 'latest'
-}, (error, event) => {
-    console.log(event);
-}).then((events) => {
-    console.log(events);
-});
+async function addWafBlackIpPastEvents() {
+    const returns = await cloudbricWafBlackIpStorage.getPastEvents('AddWafBlackIp', {
+        fromBlock: 8360000,
+        toBlock: 'latest'
+    });
+    console.log(returns);
+}
+
+addWafBlackIpPastEvents();
