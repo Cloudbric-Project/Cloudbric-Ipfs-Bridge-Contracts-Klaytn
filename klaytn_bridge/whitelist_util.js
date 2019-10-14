@@ -90,15 +90,33 @@ async function addWhiteListUsingList() {
 async function addWhiteListWorker() {
     const worker = process.argv[2];
     const directoryPath = `${__dirname}/../work`;
-    
-    const rawdata = readLastLines.read(`${directoryPath}/white_list_worker_${worker}.json`);
-    const workQuota = JSON.parse(rawdata);
-    
-    for (let i = workQuota.from; i < workQuota.to; i++) {
-        const currentBrdailyIndex = workQuota.brdailyIdxList;
+    const workSheet = `${directoryPath}/white_list_worker_${worker}.json`;
 
+    const feePayer = await caver.klay.accounts.wallet.add(
+        vault.cypress.accounts.delegate.privateKey,
+        vault.cypress.accounts.delegate.address
+    );
+    
+    if (fs.existsSync(workSheet)) {
+        // pass
+    } else {
+        console.log(`workSheet isn't exist. prcoess seems to be over.`);
     }
     
+    
+    const rawdata = readLastLines.read(`${directoryPath}/white_list_worker_${worker}.json`);
+    let workQuota = JSON.parse(rawdata);
+    // workQuota has members... from, current, to
+    
+    while(true) {
+        const from = workQuota.from;
+        const current = workQuota.current;
+        const to = workQuota.to;
+
+        console.log(`${colorBoard.FgGreen}++++++++++++++++++++++++++++++++++++++${colorBoard.FgYellow}${from} / ${colorBoard.FgRed}${brdailyIdxList[length - 1]}${colorBoard.FgGreen}++++++++++++++++++++++++++++++++++++++`); 
+         
+        console.log(`${colorBoard.FgRed}--------------------------------------${colorBoard.FgWhite}${to - current} remained.${colorBoard.FgRed}--------------------------------------`); 
+    }
 
 }
 
