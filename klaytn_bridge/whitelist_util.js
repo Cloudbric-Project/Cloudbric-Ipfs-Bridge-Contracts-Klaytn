@@ -8,11 +8,11 @@ const common = require(`${__dirname}/common`);
 const dbPromiseInterface = require(`${__dirname}/../db/db_promise`);
 const schemaLog = new dbPromiseInterface('log');
 
-const vault = caverConfig.vault;
 const caver = caverConfig.caver;
-const whiteList = contract.whiteList;
+const vault = caverConfig.vault;
+const whiteList = contract.whiteList; 
 
-async function addWhiteList(address, feePayer) {
+async function addWhiteList(address, feePayer) { 
     let abiAddWhiteList = 
         whiteList.methods.addWhiteList(
             address
@@ -38,7 +38,7 @@ async function addWhiteListUsingList() {
         vault.cypress.accounts.delegate.privateKey,
         vault.cypress.accounts.delegate.address
     );
-    const brdailyIdxList = await common.getWhiteListAddIndexList();
+    const brdailyIdxList = await common.getWhiteListAddIndexList(); 
     const length = brdailyIdxList.length;
 
     console.log("CREATE ACCOUNT...");
@@ -102,22 +102,77 @@ async function addWhiteListWorker() {
     } else {
         console.log(`workSheet isn't exist. prcoess seems to be over.`);
     }
-    
-    
-    const rawdata = readLastLines.read(`${directoryPath}/white_list_worker_${worker}.json`);
-    let workQuota = JSON.parse(rawdata);
-    // workQuota has members... from, current, to
-    
+   
+    const rawdata = await readLastLines.read(workSheet, 1);
+    const workQuota = JSON.parse(rawdata);
+    let workStatus = {};
+    workStatus.from = parseInt(workQuota.from);
+    workStatus.to = parseInt(workQuota.to);
+    workStatus.current = parseInt(workQuota.current);
+   
+    console.log(`Allocated Workload`);
+    console.log(workQuota);
     while(true) {
-        const from = workQuota.from;
-        const current = workQuota.current;
-        const to = workQuota.to;
+        console.log(`${colorBoard.FgGreen}++++++++++++++++++++++++++++++++++++++${colorBoard.FgYellow}${workStatus.current} / ${colorBoard.FgRed}${workStatus.to}${colorBoard.FgGreen}++++++++++++++++++++++++++++++++++++++`); 
 
-        console.log(`${colorBoard.FgGreen}++++++++++++++++++++++++++++++++++++++${colorBoard.FgYellow}${from} / ${colorBoard.FgRed}${brdailyIdxList[length - 1]}${colorBoard.FgGreen}++++++++++++++++++++++++++++++++++++++`); 
-         
-        console.log(`${colorBoard.FgRed}--------------------------------------${colorBoard.FgWhite}${to - current} remained.${colorBoard.FgRed}--------------------------------------`); 
+        const account = caver.klay.accounts.create(caver.utils.randomHex(32));
+        workStatus.account = account;
+        console.log(`${colorBoard.FgWhite}address: ${colorBoard.FgCyan} ${account.address}`);
+        console.log(`${colorBoard.FgWhite}privateKey: ${colorBoard.FgCyan} ${account.privateKey}`);
+
+        let receipt = null;
+        try {
+            receipt = await addWhiteList(account.address, feePayer);
+        } catch (error) {
+            console.log(error);
+            process.exit(1);
+        }
+
+        const whiteListTxHash = receipt.transactionHash;
+        workStatus.transactionHash = whiteListTxHash;
+        console.log(`${colorBoard.FgWhite}whiteListTxHash: ${colorBoard.FgYellow} ${whiteListTxHash}`);
+
+        let uploadedDate = new Date().toISOString(); // UTC format
+        uploadedDate = uploadedDate.replace(/T/, ' ').replace(/\..+/, '');
+        
+
+        // update query
+        const updateQuery = 
+            `UPDATE brdaily_uploaded_log \
+            SET whitelist_contract_address='${whiteList._address}', \
+            whitelist_transaction_hash='${whiteListTxHash}', \
+            whitelist_uploaded_date='${uploadedDate}', \
+            from_address='${account.address}', \
+            from_private_key='${account.privateKey}' \
+            WHERE brdaily_idx='${workStatus.current}'`;
+
+        try {
+            await schemaLog.query(updateQuery);
+        } catch (error) {
+            console.log(error);
+            process.exit(1);
+        }
+        workStatus.uploadedDate = uploadedDate;
+        console.log(`${colorBoard.FgWhite}workStatus:`);
+        console.log(workStatus);
+
+        // add line to json file
+        try {
+            fs.appendFileSync(workSheet, JSON.stringify(workStatus) + '\n');
+        } catch (error) {
+            console.log(error);
+            process.exit(1);
+        }
+
+        console.log(updateQuery);
+        
+        workStatus.current++;
+        if (workStatus.current > workStatus.to)
+            break;
+        console.log(`${colorBoard.FgRed}--------------------------------------${colorBoard.FgWhite}${workStatus.to - workStatus.current} remained.${colorBoard.FgRed}--------------------------------------`); 
     }
-
+    process.exit(1);
 }
 
-addWhiteListUsingList();
+//addWhiteListUsingList();
+addWhiteListWorker();
