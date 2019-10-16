@@ -179,6 +179,7 @@ async function feeDelegatedSmartContractExecute (
             fromPrivateKey
         );
     } catch (error) {
+        console.log(error);
         throw Error(error);
     }
 
