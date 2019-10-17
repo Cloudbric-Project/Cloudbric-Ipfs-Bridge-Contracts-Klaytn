@@ -101,6 +101,7 @@ async function addWhiteListWorker() {
         // pass
     } else {
         console.log(`workSheet isn't exist. prcoess seems to be over.`);
+        process.exit(1);
     }
    
     const rawdata = await readLastLines.read(workSheet, 1);
