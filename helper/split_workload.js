@@ -12,23 +12,31 @@ const ipfsCommon = require(`${ipfsBridgePath}/common`);
 async function createSingleWhitListAddWorkSheet() {
     const file = `${klaytnBridgePath}/single_process/work_sheet/whitelist_worksheet.json`;
     if (fs.existsSync(file)) {
-        // pas
-    } else {
         console.log("work sheet is already exist. you don't finished your job yet.");
         process.exit(1);
+    } else {
+        // pass
     }
-    let workSheet = {};
+
+    let workQuota = {};
     const whiteListAddIndexList = await klaytnCommon.getWhiteListAddIndexList(); 
     const whiteListStartingIndex = whiteListAddIndexList[0];
     const whiteListDestinationIndex = whiteListAddIndexList[whiteListAddIndexList.length - 1];
    
     console.log(`CREATE SINGLE WORK SHEET... FROM: ${whiteListStartingIndex}, to: ${whiteListDestinationIndex}`);
 
-    workSheet.from = whiteListStartingIndex;
-    workSheet.current = workSheet.from;
-    workSheet.to = whiteListDestinationIndex;
-    
-    fs.writeFileSync(file, workSheet, 'utf-8', 'w');
+    workQuota.from = whiteListStartingIndex;
+    workQuota.current = workQuota.from;
+    workQuota.to = whiteListDestinationIndex;
+    workQuota = JSON.stringify(workQuota);
+    console.log(workQuota);
+
+    try {
+        fs.writeFileSync(file, workQuota, 'utf-8', 'w');
+    } catch (error) {
+        console.log(error);
+        process.exit(1);
+    }
     return true;
 }
 
@@ -38,13 +46,19 @@ async function createSingleWhitListAddWorkSheet() {
  */
 async function splitWhiteListAddWorkload () {
     const directoryPath = `${klaytnBridgePath}/worker_process/work_sheet`;
-    const fileList = fs.readdirSync(directoryPath);
-    if (fileList != null) {
+    const workSheetList = fs.readdirSync(directoryPath);
+    if(workSheetList === undefined || workSheetList.length == 0) {
+        // pass
+    } else {
         console.log("work sheet is already exist. you don't finished your job yet.");
         process.exit(1);
     }
 
     const numOfWorkers = process.argv[2];
+    if (numOfWorkers == null) {
+        console.log(`Please input parameter(numOfWorker)`);
+        process.exit(1);
+    }
     const quota = constant.WORKLOAD / numOfWorkers;
     let workSheet = [];
 
@@ -79,25 +93,33 @@ async function splitWhiteListAddWorkload () {
  * there is only one fee delegation account who actually send transaction to Klaytn.
  */
 async function createSingleWafBlackIpAddWorkSheet() {
-    const file = `${klaytnBridgePath}/single_process/work_sheet/waf_blackip_worksheet.json`;
+    const file = `${klaytnBridgePath}/single_process/work_sheet/waf_black_ip_worksheet.json`;
     if (fs.existsSync(file)) {
-        // pass
-    } else {
         console.log("work sheet is already exist. you don't finished your job yet.");
         process.exit(1);
+    } else {
+        // pass
     }
-    let workSheet = {};
+    let workQuota = {};
     const wafBlackIpAddIndexList = await klaytnCommon.getWafBlackIpAddIndexList(); 
+    const length = wafBlackIpAddIndexList.length;
     const wafBlackIpStartingIndex = wafBlackIpAddIndexList[0];
-    const wafBlackIpDestinationIndex = whiteListAddIndexList[whiteListAddIndexList.length - 1];
+    const wafBlackIpDestinationIndex = wafBlackIpAddIndexList[length - 1];
    
     console.log(`CREATE SINGLE WORK SHEET... FROM: ${wafBlackIpStartingIndex}, to: ${wafBlackIpDestinationIndex}`);
 
-    workSheet.from = wafBlackIpStartingIndex;
-    workSheet.current = workSheet.from;
-    workSheet.to = wafBlackIpDestinationIndex;
-    
-    fs.writeFileSync(file, workSheet, 'utf-8', 'w');
+    workQuota.from = wafBlackIpStartingIndex;
+    workQuota.current = workQuota.from;
+    workQuota.to = wafBlackIpDestinationIndex;
+    workQuota = JSON.stringify(workQuota);
+    console.log(workQuota);
+   
+    try {
+        fs.writeFileSync(file, workQuota, 'utf-8', 'w');
+    } catch (error) {
+        console.log(error);
+        process.exit(1);
+    }
     return true;
 }
 
@@ -107,13 +129,19 @@ async function createSingleWafBlackIpAddWorkSheet() {
  */
 async function splitWafBlackIpAddWorkload () {
     const directoryPath = `${klaytnBridgePath}/worker_process/work_sheet`;
-    const fileList = fs.readdirSync(directoryPath);
-    if (fileList != null) {
+    const workSheetList = fs.readdirSync(directoryPath);
+    if(workSheetList === undefined || workSheetList.length == 0) {
+        // pass
+    } else {
         console.log("work sheet is already exist. you don't finished your job yet.");
         process.exit(1);
     }
 
     const numOfWorkers = process.argv[2];
+    if (numOfWorkers == null) {
+        console.log(`Please input parameter(numOfWorker)`);
+        process.exit(1);
+    }
     const quota = constant.WORKLOAD / numOfWorkers;
     let workSheet = [];
 
@@ -144,20 +172,37 @@ async function splitWafBlackIpAddWorkload () {
 }
 
 async function splitIpfsWafBlackIpAddWorkload () {
-    const directoryPath = `${ipfsBridgePath}/worker_process/`;
-    const isWorkSheetExist = fs.readdirSync(directoryPath);
-    if (isWorkSheetExist) {
+    const directoryPath = `${ipfsBridgePath}/worker_process/work_sheet/waf_black_ip`;
+    const workSheetList = fs.readdirSync(directoryPath);
+    if(workSheetList === undefined || workSheetList.length == 0) {
+        // pass
+    } else {
         console.log("work sheet is already exist. you don't finished your job yet.");
         process.exit(1);
     }
 
     const numOfWorkers = process.argv[2];
-    const quota = constant.WORKLOAD / numOfWorkers;
+    if (numOfWorkers == null) {
+        console.log(`Please input parameter(numOfWorker)`);
+        process.exit(1);
+    }
+    const dataStorage = `${__dirname}/../data/waf_black_ip`;
+    const dataList = fs.readdirSync(dataStorage);
+    const quota = dataList.length / numOfWorkers;
     let workSheet = [];
 
-    const ipfsAddIndexList = fs.readdirSync(`${__dirname}/../data/waf_black_ip/`)
-    const ipfsStartingIndex = wafBlackIpAddIndexList[0];
-    const ipfsDestinationIndex = whiteListAddIndexList[whiteListAddIndexList.length - 1];
+    const ipfsAddIndexList = fs.readdirSync(`${__dirname}/../data/waf_black_ip/`);
+    if (ipfsAddIndexList === undefined || ipfsAddIndexList.length == 0) {
+        console.log("You must execute preprocess waf black ip script.");
+        process.exit(1);
+    }
+
+    let ipfsStartingIndex = ipfsAddIndexList[0];
+    let ipfsDestinationIndex = ipfsAddIndexList[ipfsAddIndexList.length - 1];
+
+    // remove file extension .json and convert to Number 
+    ipfsStartingIndex = parseInt(ipfsStartingIndex.slice(0, ipfsStartingIndex.length - 5));
+    ipfsDestinationIndex = parseInt(ipfsDestinationIndex.slice(0, ipfsDestinationIndex.length - 5));
     
     console.log(`CREATE ${numOfWorkers} WORK SHEET... FROM: ${ipfsStartingIndex}, to: ${ipfsDestinationIndex}`);
     
@@ -179,4 +224,12 @@ async function splitIpfsWafBlackIpAddWorkload () {
     for (let i  = 0; i < workSheet.length; i++) {
         fs.writeFileSync(`${directoryPath}/ipfs_worker_${i}.json`, workSheet[i], 'utf-8', 'w');
     }
+}
+
+module.exports = {
+    createSingleWhitListAddWorkSheet: createSingleWhitListAddWorkSheet,
+    createSingleWafBlackIpAddWorkSheet: createSingleWafBlackIpAddWorkSheet,
+    splitWhiteListAddWorkload: splitWhiteListAddWorkload,
+    splitWafBlackIpAddWorkload: splitWafBlackIpAddWorkload,
+    splitIpfsWafBlackIpAddWorkload: splitIpfsWafBlackIpAddWorkload
 }

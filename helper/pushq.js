@@ -1,9 +1,7 @@
 const fs = require('fs');
 const request = require('request');
-const path = require('path');
 
-const appDir = path.dirname('index.js');
-const pushqSecret = fs.readFileSync(`${appDir}/private/.pushq.json`).toString();
+const pushqSecret = fs.readFileSync(`${__dirname}/../private/.pushq.json`).toString();
 const parsedSecret = JSON.parse(pushqSecret);
 const vault = parsedSecret.config;
 

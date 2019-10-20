@@ -1,9 +1,7 @@
 const mysql = require('mysql');
 const fs = require('fs');
-const path = require('path');
 
-const appDir = path.dirname('index.js');
-const dbSecret = fs.readFileSync(`${appDir}/private/.db.json`).toString();
+const dbSecret = fs.readFileSync(`${__dirname}/../private/.db.json`).toString();
 const vault = JSON.parse(dbSecret);
 
 class DBpromiseInterface {

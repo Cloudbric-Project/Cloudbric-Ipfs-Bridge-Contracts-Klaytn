@@ -1,9 +1,10 @@
 const fs = require('fs');
-const dbPromiseInterface = require(`./db/db_promise`);
+const constant = require(`${__dirname}/config/constant`);
+const dbPromiseInterface = require(`${__dirname}/db/db_promise`);
 const schemaBr = new dbPromiseInterface('br');
 const schemaLog = new dbPromiseInterface('log');
-const dataStorage = `./data/waf_black_ip`;
-const pushq = require(`./helper/pushq`);
+const dataStorage = `${__dirname}/data/waf_black_ip`;
+const pushq = require(`${__dirname}/helper/pushq`);
 
 /**
  * 
@@ -23,7 +24,6 @@ async function fetchRows(fetchQueryFromStartingIdx) {
 }
 
 async function convertRowToJSON(rows) {
-    console.log(`convert Row To JSON is ended`);
     rows.forEach((row) => {
         let rowJsonString = JSON.stringify(row);
         let parsedRow = JSON.parse(rowJsonString);
@@ -51,7 +51,11 @@ async function main() {
     } catch (error) { 
         console.log(error);
     }
-    const size = process.argv[2];
+    const size = constant.WORKLOAD;
+    if (size == null) {
+        console.log(`Please input parameter(numOfFetchRow)`);
+        process.exit(1);
+    }
 
     const fetchQueryFromStartingIdx = 
         `SELECT * FROM brdaily \

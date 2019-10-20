@@ -40,7 +40,7 @@ async function getWhiteListAddIndexList() {
  * get starting point of brdaily index at CloudbricWafBlackIpStorage standards.
  * @return {Number} lastInsertedBrdailyIndx
  */
-async function getBlackIpStartingBrdailyIndex () {
+async function getWafBlackIpStartingBrdailyIndex () {
     const query = 
         `SELECT brdaily_idx FROM brdaily_uploaded_log \
         WHERE storage_transaction_hash IS NULL \
@@ -56,7 +56,7 @@ async function getBlackIpStartingBrdailyIndex () {
  * get index of the rows that should be inserted at CloudbricWafBlackIpStorage standards.
  * @return {Array} brdailyIdxList
  */
-async function getBlackIpAddIndexList() {
+async function getWafBlackIpAddIndexList() {
     const getBrdailyIdxList =
         `SELECT brdaily_idx FROM brdaily_uploaded_log \
         WHERE storage_transaction_hash IS NULL \
@@ -73,6 +73,6 @@ async function getBlackIpAddIndexList() {
 module.exports = {
     getWhiteListStartingBrdailyIndex: getWhiteListStartingBrdailyIndex,
     getWhiteListAddIndexList: getWhiteListAddIndexList,
-    getBlackIpStartingBrdailyIndex: getBlackIpStartingBrdailyIndex,
-    getBlackIpAddIndexList: getBlackIpAddIndexList
+    getWafBlackIpStartingBrdailyIndex: getWafBlackIpStartingBrdailyIndex,
+    getWafBlackIpAddIndexList: getWafBlackIpAddIndexList
 }
