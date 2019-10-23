@@ -7,9 +7,9 @@ const dataStorage = `${__dirname}/data/waf_black_ip`;
 const pushq = require(`${__dirname}/helper/pushq`);
 
 /**
- * 
- * @param {String} query which fetch from brdaily table from starting point(last inserted index + 1)
- * @return {Array.<Object>} rows
+ * fetch rows from brdaily table from starting point(last inserted index + 1)
+ * @param {String} query
+ * @return {Array.<Object>} rows which contains row of threat data
  */
 async function fetchRows(fetchQueryFromStartingIdx) {
     let rows = null;
@@ -23,6 +23,10 @@ async function fetchRows(fetchQueryFromStartingIdx) {
     }
 }
 
+/**
+ * convert each row to .json file in /data/waf_black_ip directory.
+ * @param {Array.<Object>} rows which contains row of threat data
+ */
 async function convertRowToJSON(rows) {
     rows.forEach((row) => {
         let rowJsonString = JSON.stringify(row);
@@ -52,10 +56,6 @@ async function main() {
         console.log(error);
     }
     const size = constant.WORKLOAD;
-    if (size == null) {
-        console.log(`Please input parameter(numOfFetchRow)`);
-        process.exit(1);
-    }
 
     const fetchQueryFromStartingIdx = 
         `SELECT * FROM brdaily \
