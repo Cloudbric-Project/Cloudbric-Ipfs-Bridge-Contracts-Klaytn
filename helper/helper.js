@@ -92,7 +92,7 @@ function createRandomHexString (length) {
 function createDummy (idx) {
     return {
         clbIndex: 210511986 + idx,
-        wafBlackIpHash: createRandomHexString(64),
+        hash: createRandomHexString(64),
         hashFunction: 12,
         size: 20
     }
@@ -118,7 +118,7 @@ function createDummy (idx) {
 function encodeDataSet (dataSet) {
     return {
         encodedClbIndex: stringToBytes32(String(dataSet.clbIndex)),
-        encodedWafBlackIpHash: '0x' + dataSet.wafBlackIpHash,
+        encodedHash: '0x' + dataSet.hash,
         encodedHashFunction: caver.klay.abi.encodeParameter('uint8', dataSet.hashFunction),
         encodedSize: caver.klay.abi.encodeParameter('uint8', dataSet.size),
     }
