@@ -8,7 +8,7 @@ module.exports = function (deployer) {
         .then(() => {
             if (CloudbricHackerWalletStorage._json) {
                 fs.writeFile(
-                    'testMetadataOfHackerWalletStorage',
+                    'deployedMetadataOfHackerWalletStorage',
                     JSON.stringify(CloudbricHackerWalletStorage._json, 2),
                     (err) => {
                         if (err) throw err
@@ -17,7 +17,7 @@ module.exports = function (deployer) {
                 )
             }
             fs.writeFile(
-                'testAddressOfHackerWalletStorage',
+                'deployedAddressOfHackerWalletStorage',
                 CloudbricHackerWalletStorage.address,
                 (err) => {
                     if (err) throw err
