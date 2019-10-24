@@ -10,6 +10,9 @@ const schemaLog = new dbPromiseInterface('log');
 const dataStorage = `${__dirname}/../data/waf_black_ip`;
 const pushq = require(`${__dirname}/../helper/pushq`);
 
+/**
+ * almost same with ipfs_add_waf_black_ip_worker but, split workload to each worker process. 
+ */
 async function addWafBlackIpWorker() {
     const worker = process.argv[2];
     const workSheet = `${__dirname}/worker_process/work_sheet/waf_black_ip/ipfs_worker_${worker}.json`;

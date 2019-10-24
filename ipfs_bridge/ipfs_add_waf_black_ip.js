@@ -10,6 +10,10 @@ const schemaLog = new dbPromiseInterface('log');
 const dataStorage = `${__dirname}/../data/waf_black_ip`;
 const pushq = require(`${__dirname}/../helper/pushq`);
 
+/**
+ * write waf_black_ip data in /data/waf_black_ip/<brdaily_idx>.json format to IPFS.
+ * also write log in the database table.
+ */
 async function ipfsAddWafBlackIp() {
     const failedList = fs.readdirSync(dataStorage);
     for (let i = 0; i < failedList.length; i++) {
