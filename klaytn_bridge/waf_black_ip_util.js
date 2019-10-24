@@ -39,7 +39,7 @@ async function addWafBlackIpBatchUsingList() {
     }
         
     console.log(`${colorBoard.FgWhite}Start... from ${brdailyIdxList[0]} to ${brdailyIdxList[length - 1]}`);
-    for (let i = 0; i < brdailyIdxList.length; i++) {
+    for (let i = 0; i < length; i++) {
         if (i >= workQuote) {
             break;
         }
@@ -68,8 +68,6 @@ async function addWafBlackIpBatchUsingList() {
             size: multihash.size    
         }
         const encodedDataSet = helper.encodeDataSet(dataSet);
-        console.log(`${colorBoard.FgWhite}`);
-        console.log(encodedDataSet);
 
         const abiAddWafBlackIp = 
             cloudbricWafBlackIpStorage.methods.addWafBlackIp(
@@ -112,7 +110,7 @@ async function addWafBlackIpBatchUsingList() {
             console.log(error);
             process.exit(1);
         }
-        console.log(`${colorBoard.FgRed}--------------------------------------${colorBoard.FgWhite}${i}'th Iteration ${workQuote - i + 1} remained.${colorBoard.FgRed}--------------------------------------`); 
+        console.log(`${colorBoard.FgRed}--------------------------------------${colorBoard.FgWhite}${i}'th Iteration ${workQuote - i + 1} remained.${colorBoard.FgRed}--------------------------------------${colorBoard.FgWhite}`); 
     }
     process.exit(1);
 }
