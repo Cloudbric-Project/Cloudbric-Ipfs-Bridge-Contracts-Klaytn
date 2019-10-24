@@ -19,3 +19,7 @@ async function getWafBlackIpAddIndexList() {
     });
     return brdailyIdxList;
 }
+
+module.exports = {
+    getWafBlackIpAddIndexList: getWafBlackIpAddIndexList
+}

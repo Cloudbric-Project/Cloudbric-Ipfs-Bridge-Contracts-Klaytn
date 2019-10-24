@@ -4,11 +4,11 @@ import "./open-zeppelin/Ownable.sol";
 import "./WhiteList.sol";
 
 /**
- * @title CloudbricWafBlackIpStorage
- * @dev this contract has an Ipfs CId(Contents Identifier) of
- * black ips detected by Cloudbric WAF.
+ * @title CloudbricPhishingUrlStorage
+ * @dev This contract has an Ipfs CId(Contents Identifier) of
+ * phishing url reported by user.
  */
-contract CloudbricWafBlackIpStorage is Ownable {
+contract CloudbricPhishingUrlStorage is Ownable {
     /**
     * @notice This contract uses Multihash Identifier which is used by IPFS.
     */
@@ -20,14 +20,14 @@ contract CloudbricWafBlackIpStorage is Ownable {
     }
 
     /**
-    * @dev prefix "waf" means these data is collected by Cloudbric WAF.
+    * @dev prefix "ur" is shortcut of "user reported" which means these data is collected by user.
     */
-    mapping(bytes32 => Multihash) public wafBlackIpList;
-    bytes32[] public wbiLookUpTable;
+    mapping(bytes32 => Multihash) public urPhishingUrlList;
+    bytes32[] public puLookUpTable;
 
     WhiteList public whiteList;
 
-    event AddWafBlackIp(address indexed from, bytes32 clbIndex, bytes32 hash, uint8 hashFunction, uint8 size);
+    event AddPhishingUrl(address indexed from, bytes32 clbIndex, bytes32 hash, uint8 hashFunction, uint8 size);
 
     modifier onlyWhiteListed(address _addr) {
         require(
@@ -39,7 +39,7 @@ contract CloudbricWafBlackIpStorage is Ownable {
 
     modifier onlyUniqueClbIndexAllowed(bytes32 _clbIndex) {
         require(
-            wafBlackIpList[_clbIndex].isExist == false,
+            urPhishingUrlList[_clbIndex].isExist == false,
             "Only unique clbIndex can be added"
         );
         _;
@@ -50,54 +50,54 @@ contract CloudbricWafBlackIpStorage is Ownable {
     }
 
     /**
-    * @dev get length of Ipfs CIds of black ip data which is detected by Cloudbric WAF.
+    * @dev get length of Ipfs CIds of phishing url data which is reported by user.
     */
-    function wafBlackIpListSize()
+    function urPhishingUrlListSize()
         public
         view
         returns (uint)
     {
-        return wbiLookUpTable.length;
+        return puLookUpTable.length;
     }
 
     /**
-    * @dev get Ipfs CId of black ip data detected by Cloudbric WAF using index.
+    * @dev get Ipfs CId of phishing url data reported by user using index.
     * @notice you should know size of lookup table.
     */
-    function getWafBlackIpAtIndex(uint _index)
+    function getPhishingUrlAtIndex(uint _index)
         public
         view
         returns (bytes32 hash, uint8 hash_function, uint8 size)
     {
-        bytes32 wafBlackIpIdx = wbiLookUpTable[_index];
+        bytes32 phishingUrlIdx = puLookUpTable[_index];
         require(
-            _index < wbiLookUpTable.length,
+            _index < puLookUpTable.length,
             "Given index is out of bound."
         );
 
-        Multihash storage multihash = wafBlackIpList[wafBlackIpIdx];
+        Multihash storage multihash = urPhishingUrlList[phishingUrlIdx];
         return (multihash.hash, multihash.hashFunction, multihash.size);
     }
 
     /**
-    * @dev get Ipfs CId of black ip data detected by Cloudbric WAF using Cloudbric Data Index.
+    * @dev get Ipfs CId of phishing url data reported by user using Cloudbric Data Index.
     * @param _clbIndex Cloudbric Index which is used by Cloudbric Labs or Cloudbric Database.
     */
-    function getWafBlackIpAtClbIndex(bytes32 _clbIndex)
+    function getPhishingUrlAtClbIndex(bytes32 _clbIndex)
         public
         view
         returns (bytes32 hash, uint8 hash_function, uint8 size)
     {
-        Multihash storage multihash = wafBlackIpList[_clbIndex];
+        Multihash storage multihash = urPhishingUrlList[_clbIndex];
         return (multihash.hash, multihash.hashFunction, multihash.size);
     }
 
     /**
-    * @dev add Ipfs CId of black ip data which is detected by Cloudbric WAF.
+    * @dev add Ipfs CId of phishing url data which is reported by user.
     * @param _clbIndex The Index of Cloudbric ThreatDB.
     * @param _hash The Ipfs hash which came from mutlihash identifier.
     */
-    function addWafBlackIp(
+    function addPhishingUrl(
         bytes32 _clbIndex,
         bytes32 _hash,
         uint8 _hashFunction,
@@ -108,9 +108,9 @@ contract CloudbricWafBlackIpStorage is Ownable {
         onlyUniqueClbIndexAllowed(_clbIndex)
         returns (bool)
     {
-        wbiLookUpTable.push(_clbIndex);
-        wafBlackIpList[_clbIndex] = Multihash(_hash, _hashFunction, _size, true);
-        emit AddWafBlackIp(msg.sender, _clbIndex, _hash, _hashFunction, _size);
+        puLookUpTable.push(_clbIndex);
+        urPhishingUrlList[_clbIndex] = Multihash(_hash, _hashFunction, _size, true);
+        emit AddPhishingUrl(msg.sender, _clbIndex, _hash, _hashFunction, _size);
         return true;
     }
 }

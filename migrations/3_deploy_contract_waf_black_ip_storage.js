@@ -1,13 +1,13 @@
 const CloudbricWafBlackIpStorage = artifacts.require('./CloudbricWafBlackIpStorage.sol');
 const fs = require('fs');
-const deployedAddressOfWhiteList = fs.readFileSync('../deployedAddressOfWhiteList', 'utf-8');
+const testAddressOfWhiteList = fs.readFileSync('../testAddressOfWhiteList', 'utf-8');
 
 module.exports = function (deployer) {
-    deployer.deploy(CloudbricWafBlackIpStorage, deployedAddressOfWhiteList)
+    deployer.deploy(CloudbricWafBlackIpStorage, testAddressOfWhiteList, {overwrite: false})
         .then(() => {
             if (CloudbricWafBlackIpStorage._json) {
                 fs.writeFile(
-                    'deployedMetadataOfWafBlackIpStorage',
+                    'testMetadataOfWafBlackIpStorage',
                     JSON.stringify(CloudbricWafBlackIpStorage._json, 2),
                     (err) => {
                         if (err) throw err
@@ -16,12 +16,12 @@ module.exports = function (deployer) {
                 )
             }
             fs.writeFile(
-                'deployedAddressOfWafBlackIpStorage',
+                'testAddressOfWafBlackIpStorage',
                 CloudbricWafBlackIpStorage.address,
                 (err) => {
                     if (err) throw err
                     console.log(`The deployed address of ${CloudbricWafBlackIpStorage._json.contractName} is ${CloudbricWafBlackIpStorage.address}`)
                 }
             )
-        })
+        });
 }
