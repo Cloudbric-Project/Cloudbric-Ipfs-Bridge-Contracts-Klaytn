@@ -12,6 +12,9 @@ const vault = parsedSecret.config;
  * @return {Promise} Promise object represents the response body
  */
 function sendMessage(code, message) {
+  if (code === null || code === undefined) {
+    code = 'cloudbric';
+  }
   let formData = { 
       'uuid': vault.uuid,
       'secret_key': vault.secretKey,
