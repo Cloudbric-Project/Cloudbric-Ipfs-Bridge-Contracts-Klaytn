@@ -18,7 +18,11 @@ async function fetchRows(fetchQueryFromStartingIdx) {
         rows = await schemaBr.query(fetchQueryFromStartingIdx);
         return rows;
     } catch (error) {
-        pushq.sendMessage(`cloudbric', '[TEST] error fetch row from ${startIdx}`);
+        message = 
+            `[Klaytn]: failed to fetch brdaily rows
+            from ${process.argv[0]}
+            Let's try: node ${process.argv[0]} in shell to find bugs.`;
+        pushq.sendMessage(message);
         throw(error);
     }
 }
@@ -34,7 +38,11 @@ async function convertRowToJSON(rows) {
         try {
             fs.writeFileSync(`${dataStorage}/${parsedRow.idx}.json`, rowJsonString);
         } catch (error) {
-            pushq.sendMessage(`cloudbric', '[TEST] error convert ${parsedRow.idx}'s row`);
+            message = 
+                `[Klaytn]: failed to convert brdaily row to JSON 
+                from ${process.argv[0]}
+                Let's try: node ${process.argv[0]} in shell to find bugs.`;
+            pushq.sendMessage(message);
             throw(error);
         }
     });
@@ -53,6 +61,11 @@ async function main() {
         const lastIdx = result[0].brdaily_idx;
         startIdx = lastIdx + 1;
     } catch (error) { 
+        message = 
+            `[Klaytn]: failed to query to Labs DB
+            from ${process.argv[0]}
+            Let's try: node ${process.argv[0]} in shell to find bugs.`;
+        pushq.sendMessage(message);
         console.log(error);
     }
     const size = constant.WORKLOAD;
