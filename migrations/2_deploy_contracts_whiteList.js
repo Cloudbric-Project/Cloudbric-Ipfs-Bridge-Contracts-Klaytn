@@ -6,7 +6,7 @@ module.exports = function (deployer) {
         .then(() => {
             if (WhiteList._json) {
                 fs.writeFile(
-                    'testMetadataOfWhiteList',
+                    'metadata/testMetadataOfWhiteList',
                     JSON.stringify(WhiteList._json, 2),
                     (err) => {
                         if (err) throw err
@@ -15,7 +15,7 @@ module.exports = function (deployer) {
                 )
             }
             fs.writeFile(
-                'testAddressOfWhiteList',
+                'metadata/testAddressOfWhiteList',
                 WhiteList.address,
                 (err) => {
                     if (err) throw err

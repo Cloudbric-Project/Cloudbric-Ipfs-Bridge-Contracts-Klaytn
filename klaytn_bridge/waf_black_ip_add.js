@@ -1,3 +1,3 @@
-const wafBlackIpUtil = require('waf_black_ip_util');
+const wafBlackIpUtil = require('./waf_black_ip_util');
 
-addWafBlackIpBatchUsingList();
+wafBlackIpUtil.addWafBlackIpBatchUsingList();

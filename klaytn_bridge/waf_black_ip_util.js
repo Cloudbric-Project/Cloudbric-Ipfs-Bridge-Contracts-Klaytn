@@ -110,7 +110,7 @@ async function addWafBlackIpBatchUsingList() {
             console.log(error);
             process.exit(1);
         }
-        console.log(`${colorBoard.FgRed}--------------------------------------${colorBoard.FgWhite}${i}'th Iteration ${workQuote - i + 1} remained.${colorBoard.FgRed}--------------------------------------${colorBoard.FgWhite}`); 
+        console.log(`${colorBoard.FgRed}--------------------------------------${colorBoard.FgWhite}${i}'th Iteration ${length - i + 1} remained.${colorBoard.FgRed}--------------------------------------${colorBoard.FgWhite}`); 
     }
     process.exit(1);
 }

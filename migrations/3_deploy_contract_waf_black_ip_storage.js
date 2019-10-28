@@ -7,7 +7,7 @@ module.exports = function (deployer) {
         .then(() => {
             if (CloudbricWafBlackIpStorage._json) {
                 fs.writeFile(
-                    'testMetadataOfWafBlackIpStorage',
+                    'metadata/testMetadataOfWafBlackIpStorage',
                     JSON.stringify(CloudbricWafBlackIpStorage._json, 2),
                     (err) => {
                         if (err) throw err
@@ -16,7 +16,7 @@ module.exports = function (deployer) {
                 )
             }
             fs.writeFile(
-                'testAddressOfWafBlackIpStorage',
+                'metadata/testAddressOfWafBlackIpStorage',
                 CloudbricWafBlackIpStorage.address,
                 (err) => {
                     if (err) throw err
