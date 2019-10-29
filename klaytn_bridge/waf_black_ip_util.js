@@ -11,7 +11,7 @@ const vault = caverConfig.vault;
 const caver = caverConfig.caver;
 const cloudbricWafBlackIpStorage = contract.cloudbricWafBlackIpStorage;
 
-async function addWafBlackIpBatchUsingList() {
+async function addWafBlackIpUsingList() {
     const feePayer = await caver.klay.accounts.wallet.add(
         vault.cypress.accounts.delegate.privateKey,
         vault.cypress.accounts.delegate.address
@@ -63,20 +63,21 @@ async function addWafBlackIpBatchUsingList() {
 
         const dataSet = {
             clbIndex: brdailyIdxList[i],
-            wafBlackIpHash: multihash.hash,
+            hash: multihash.hash,
             hashFunction: multihash.hashFunction,
             size: multihash.size    
         }
         const encodedDataSet = helper.encodeDataSet(dataSet);
+        console.log(encodedDataSet);
 
         const abiAddWafBlackIp = 
             cloudbricWafBlackIpStorage.methods.addWafBlackIp(
                 encodedDataSet.encodedClbIndex, 
-                encodedDataSet.encodedWafBlackIpHash, 
+                encodedDataSet.encodedHash, 
                 encodedDataSet.encodedHashFunction, 
                 encodedDataSet.encodedSize
             ).encodeABI();
-        
+       
         console.log(`${colorBoard.FgWhite}addWafBlackIp Transaction Execute...`);
         let receipt = null;
         try {
@@ -137,7 +138,7 @@ async function getWafBlackIpAtClbIndex(clbIndex) {
 }
 
 module.exports = {
-    addWafBlackIpBatchUsingList: addWafBlackIpBatchUsingList,
+    addWafBlackIpUsingList: addWafBlackIpUsingList,
     scanWafBlackIpStorage:scanWafBlackIpStorage,
     getWafBlackIpAtClbIndex: getWafBlackIpAtClbIndex
 }

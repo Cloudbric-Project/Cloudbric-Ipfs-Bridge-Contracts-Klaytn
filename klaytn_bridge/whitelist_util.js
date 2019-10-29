@@ -85,9 +85,10 @@ async function addWhiteListUsingList() {
         }
         console.log(`${colorBoard.FgRed}--------------------------------------${colorBoard.FgWhite}${i}'th Iteration ${colorBoard.FgRed}--------------------------------------`); 
     }
+    process.exit(1);
 }
 
-async function addWhiteListWorker() {
+async function addWhiteListUsingWorker() {
     const worker = process.argv[2];
     const directoryPath = `${__dirname}/../work`;
     const workSheet = `${directoryPath}/white_list_worker_${worker}.json`;
@@ -175,5 +176,6 @@ async function addWhiteListWorker() {
     process.exit(1);
 }
 
-//addWhiteListUsingList();
-addWhiteListWorker();
+module.exports = {
+    addWhiteListUsingList: addWhiteListUsingList
+}
