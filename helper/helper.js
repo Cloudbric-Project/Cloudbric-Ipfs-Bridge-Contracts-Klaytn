@@ -1,3 +1,4 @@
+const _ = require('underscore');
 const bs58 = require('bs58');
 const constant = require('../config/constant');
 const caverConfig = require('../config/caver');
@@ -11,7 +12,10 @@ const caver = caverConfig.caver;
  * @param {String} stringData
  * @return {String} bytes32
  */
-function stringToBytes32 (stringData) {
+const stringToBytes32 = (stringData) => {
+    if (!_.isString(stringData)) {
+        throw new Error(`The parameter ${stringData} must be a valid string.`);
+    }
     hexConverted = caver.utils.asciiToHex(stringData);
     bytes32 = caver.utils.padRight(hexConverted, 64);
     return bytes32;
@@ -24,7 +28,10 @@ function stringToBytes32 (stringData) {
  * @param {Stirng} bytes32
  * @return {String} ascii 
  */
-function bytes32ToString (bytes32) {
+const bytes32ToString = (bytes32) => {
+    if (!_.isString(bytes32)) {
+        throw new Error(`The parameter ${stringData} must be a valid HEX string.`);
+    }
     ascii = caver.utils.hexToAscii(bytes32);
     return ascii;
 }
@@ -40,7 +47,17 @@ function bytes32ToString (bytes32) {
  * @param {Object} multiHash
  * @return {String} ipfsHash
  */
-function multihashToIpfsHash (multiHash) {
+const multihashToIpfsHash = (multiHash) => {
+    if(!_.isObject(multiHash)) {
+        throw new Error(`The parameter ${multiHash} must be a valid Object.`);
+    }
+    const requiredFields = ['hashFunction', 'size', 'hash'];
+    const fields = _.allKeys(multiHash);
+    requiredFields.forEach(field => {
+        if(_.indexOf(fields, field) === -1)
+            throw new Error(`The parameter ${mutlihash} must have a valid fields.`);
+    });
+    
     const decodedHexString = multiHash.hashFunction + multiHash.size + multiHash.hash;
     const bytes = Buffer.from(decodedHexString, 'hex');
     const ipfsHash = bs58.encode(bytes);
@@ -59,7 +76,10 @@ function multihashToIpfsHash (multiHash) {
  * @param {String} ipfsHash 
  * @return {Object} multiHash
  */
-function ipfsHashToMultihash (ipfsHash) {
+const ipfsHashToMultihash = (ipfsHash) => {
+    if (!_.isString(ipfsHash)) {
+        throw new Error(`The parameter ${ipfsHash} must be a valid string.`);
+    }
     const decodedHexString = bs58.decode(ipfsHash).toString('hex');
     
     return {
@@ -74,7 +94,7 @@ function ipfsHashToMultihash (ipfsHash) {
  * @param {Number} length
  * @return {String} random hex string.
  */
-function createRandomHexString (length) {
+const createRandomHexString = (length) => {
     var result = '';
     var characters = 'ABCDEF0123456789';
     var charactersLength = characters.length;
@@ -89,7 +109,10 @@ function createRandomHexString (length) {
  * @param {Number} idx
  * @return {Object} dummy dataset.
  */
-function createDummy (idx) {
+const createDummy = (idx) => {
+    if (!_.isNumber(idx)) {
+        throw new Error(`The parameter ${ipfsHash} must be a valid number.`);
+    }
     return {
         clbIndex: 210511986 + idx,
         hash: createRandomHexString(64),
@@ -102,20 +125,29 @@ function createDummy (idx) {
  * encode dataset.
  * E.g. input: {
  *   clbIndex: 210511986,
- *   wafBlackIpHash: '29bd1aeb9d743a6fd89322b25e0f45a4d851af9c359c74b3eb4a7a72877b1da4',
+ *   hash: '29bd1aeb9d743a6fd89322b25e0f45a4d851af9c359c74b3eb4a7a72877b1da4',
  *   hashFunction: 12,
  *   size: 20
  * }
  * output: {
  *   encodedClbIndex: '0x3231303531313938360000000000000000000000000000000000000000000000,'
- *   encodedWafBlackIpHash: '0x29bd1aeb9d743a6fd89322b25e0f45a4d851af9c359c74b3eb4a7a72877b1da4',
+ *   encodedHash: '0x29bd1aeb9d743a6fd89322b25e0f45a4d851af9c359c74b3eb4a7a72877b1da4',
  *   encodedhHashFunction: '0x000000000000000000000000000000000000000000000000000000000000000c',
  *   encodedSize: '0x0000000000000000000000000000000000000000000000000000000000000014'
  * }
  * @param {Object} dataSet
  * @return {Object} encodedDataset
  */
-function encodeDataSet (dataSet) {
+const encodeDataSet = (dataSet) => {
+    if (!_.isObject(dataSet)) {
+        throw new Error(`The parameter ${dataSet} must be a valid Object.`);
+    }
+    const requiredFields = ['clbIndex', 'hash', 'hashFunction'];
+    const fields = _.allKeys(dataSet);
+    requiredFields.forEach(field => {
+        if (_.indexOf(fields, field) === -1)
+            throw new Error(`The parameter ${dataSet} must have a valid fields.`);
+    });
     return {
         encodedClbIndex: stringToBytes32(String(dataSet.clbIndex)),
         encodedHash: '0x' + dataSet.hash,
@@ -139,7 +171,16 @@ function encodeDataSet (dataSet) {
  * @param {Object} value returned by getWafBlackIp 
  * @return {Object} decoded multihash 
  */
-function decodeMultihash (multihash) {
+const decodeMultihash = (multihash) => {
+    if(!_.isObject(multiHash)) {
+        throw new Error(`The parameter ${multiHash} must be a valid Object.`);
+    }
+    const requiredFields = ['hashFunction', 'size', 'hash'];
+    const fields = _.allKeys(multiHash);
+    requiredFields.forEach(field => {
+        if(_.indexOf(fields, field) === -1)
+            throw new Error(`The parameter ${mutlihash} must have a valid fields.`);
+    });
     console.log(multihash);
     return {
         hash: multihash.hash.slice(2),
@@ -157,13 +198,25 @@ function decodeMultihash (multihash) {
  * @param {Object} abiOfMethod
  * @return {Object} receipt of transaction 
  */
-async function feeDelegatedSmartContractExecute (
+const feeDelegatedSmartContractExecute = async(
     fromAddress, 
     fromPrivateKey,
     to, 
     feePayer, 
     abiOfMethod
-) {
+) => {
+    if (!caver.utils.isAddress(fromAddress)) {
+        throw new Error(`The parameter ${fromAddress} must be a valid address`);
+    } else if (!caver.utils.isAddress(to)) {
+        throw new Error(`The parameter ${to} must be a valid address`);
+    } else if (!caver.utils.isAddress(feePayer.address)) {
+        throw new Error(`The parameter ${feePayer.address} must be a valid address`);
+    };
+
+    if (!caver.utils.isHex(fromPrivateKey)) {
+        throw new Error(`The parameter ${fromAddress} must be a valid HEX string`);
+    };
+
     let feeDelegatedSmartContractObject = {
         type: 'FEE_DELEGATED_SMART_CONTRACT_EXECUTION',
         from: fromAddress,
@@ -193,6 +246,22 @@ async function feeDelegatedSmartContractExecute (
         throw Error(error);
     }
     return receipt;
+}
+
+/**
+ * create error message.
+ * @param {String} message 
+ * @param {String} filename
+ */
+const createErrorMessage = (message, filename) => {
+    if (!_.isString(message)) {
+        throw new Error(`The parameter ${message} must be a valid HEX string`);
+    }
+    const template = 
+        `[Klaytn] failed to ${message}`
+        `Try: node ${filename} in shell to find bugs.`;
+
+    return template;
 }
 
 module.exports = {
