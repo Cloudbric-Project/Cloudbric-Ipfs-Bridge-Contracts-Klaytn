@@ -258,8 +258,8 @@ const createErrorMessage = (message, filename) => {
         throw new Error(`The parameter ${message} must be a valid HEX string`);
     }
     const template = 
-        `[Klaytn] failed to ${message}`
-        `Try: node ${filename} in shell to find bugs.`;
+        `[Klaytn] failed to ${message}
+        Check ${filename}\` in shell to sovle issue.`;
 
     return template;
 }
