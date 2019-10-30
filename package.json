@@ -22,6 +22,7 @@
     "read-last-lines": "^1.7.1",
     "request": "^2.88.0",
     "solc": "^0.4.24",
-    "truffle-hdwallet-provider-klaytn": "^1.0.13-a"
+    "truffle-hdwallet-provider-klaytn": "^1.0.13-a",
+    "underscore": "^1.9.1"
   }
 }

@@ -7,11 +7,11 @@ const vault = parsedSecret.config;
 
 /**
  * send <message> to pushq group <code> 
- * @param {String} code
  * @param {String} message 
+ * @param {String} code
  * @return {Promise} Promise object represents the response body
  */
-function sendMessage(code, message) {
+function sendMessage(message, code) {
   if (code === null || code === undefined) {
     code = 'cloudbric';
   }
