@@ -47,8 +47,8 @@ async function addWhiteListUsingList() {
     console.log("CREATE ACCOUNT...");
     await caver.klay.accounts.wallet.create(length);
 
-    for (let i = 0; i < brdailyIdxList.length; i++) {
-        console.log(`${colorBoard.FgGreen}++++++++++++++++++++++++++++++++++++++${colorBoard.FgWhite}${i}'th Iteration ${brdailyIdxList[i]} / ${colorBoard.FgRed}${brdailyIdxList[length - 1]}${colorBoard.FgGreen}++++++++++++++++++++++++++++++++++++++`); 
+    for (let i = 0; i < length; i++) {
+        console.log(`${colorBoard.FgGreen}++++++++++++++++++++++++++++++++++++++${colorBoard.FgWhite}${i}'th Iteration ${brdailyIdxList[i]} / ${colorBoard.FgRed}${brdailyIdxList[length - 1]}${colorBoard.FgGreen}++++++++++++++++++++++++++++++++++++++`);
         const key = caver.klay.accounts.wallet.getKlaytnWalletKey(i + 1);
         const account = {
             "address": key.slice(70,140),
@@ -56,13 +56,13 @@ async function addWhiteListUsingList() {
         }
         console.log(`${colorBoard.FgWhite}address: ${colorBoard.FgCyan} ${account.address}`);
         console.log(`${colorBoard.FgWhite}privateKey: ${colorBoard.FgCyan} ${account.privateKey}`);
-
         let receipt = null;
         try {
             receipt = await addWhiteList(account.address, feePayer);
         } catch (error) {
-            console.log(error);
-            process.exit(1);
+            const message = helper.createErrorMessage('add white list', __filename);
+            pushq.sendMessage(message);
+            throw new Error(error);
         }
 
         const whiteListTxHash = receipt.transactionHash;
