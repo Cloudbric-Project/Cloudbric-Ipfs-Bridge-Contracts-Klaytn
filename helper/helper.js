@@ -273,5 +273,6 @@ module.exports = {
     createDummy: createDummy,
     encodeDataSet: encodeDataSet,
     decodeMultihash, decodeMultihash,
-    feeDelegatedSmartContractExecute: feeDelegatedSmartContractExecute
+    feeDelegatedSmartContractExecute: feeDelegatedSmartContractExecute,
+    createErrorMessage: createErrorMessage
 }
