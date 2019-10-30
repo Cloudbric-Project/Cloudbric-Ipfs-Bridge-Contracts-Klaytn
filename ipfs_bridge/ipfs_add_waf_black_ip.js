@@ -4,10 +4,10 @@ const ipfsClient = require('ipfs-http-client');
 const ipfs = ipfsClient('/ip4/172.105.229.53/tcp/5001/'); 
 
 // direcotry path setup
-const helper = require(`${__dirname}/../helper/helper`);
 const dbPromiseInterface = require(`${__dirname}/../db/db_promise`);
 const schemaLog = new dbPromiseInterface('log');
 const dataStorage = `${__dirname}/../data/waf_black_ip`;
+const helper = require(`${__dirname}/../helper/helper`);
 const pushq = require(`${__dirname}/../helper/pushq`);
 
 /**
@@ -29,8 +29,9 @@ async function ipfsAddWafBlackIp() {
             result = await ipfs.add(bufferedWafBlackIp, {pin: true});
             wafBlackIpAdded = result[0];
         } catch (error) {
-            console.log(error);
-            process.exit(1);
+            const message = helper.createErrorMessage('add waf black ip data to IPFS', __filename);
+            pushq.sendMessage(message);
+            throw new Error(error);
         }
         console.log(`${idx} IS UPLOADED TO IPFS`);
         let uploaded_date = new Date().toISOString(); // UTC format
@@ -45,12 +46,13 @@ async function ipfsAddWafBlackIp() {
             // delete uploaded file for storage issue.
             fs.unlinkSync(fileName);
         } catch (error) {
-            console.log(error);
-            process.exit(1);
+            const message = helper.createErrorMessage('inser into brdaily_uploaded_table', __filename);
+            pushq.sendMessage(message);
+            throw new Error(error);
         }
     }
-    console.log("failover ended");
-		process.exit(1);
+    console.log("add black ip detected by waf to IPFS successfully");
+	process.exit(1);
 }
 
 ipfsAddWafBlackIp();

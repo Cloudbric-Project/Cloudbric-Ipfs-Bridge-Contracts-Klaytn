@@ -2,6 +2,7 @@ const dateFormat = require('dateformat');
 const caverConfig = require(`${__dirname}/../config/caver`);
 const contract = require(`${__dirname}/../config/contract`); 
 const helper = require(`${__dirname}/../helper/helper`);
+const pushq = require(`${__dirname}/../helper/pushq`);
 const colorBoard = require(`${__dirname}/../helper/color`);
 const common = require(`${__dirname}/common`);
 const dbPromiseInterface = require(`${__dirname}/../db/db_promise`);
@@ -55,6 +56,7 @@ async function addWafBlackIpUsingList() {
         const privateKey = cidResult[0].from_private_key; 
 
         if (ipfsCid == null || address == null || privateKey == null) {
+            `None matching data with brdaily_idx: ${brdailyIdxList[i]}`
             console.log("Somethings going wrong... It should be existed");
             process.exit(1);
         }
@@ -89,6 +91,7 @@ async function addWafBlackIpUsingList() {
                 abiAddWafBlackIp
             );
         } catch (error) {
+            
             console.log(error);
             process.exit(1);
         }

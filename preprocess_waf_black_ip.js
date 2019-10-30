@@ -4,6 +4,7 @@ const dbPromiseInterface = require(`${__dirname}/db/db_promise`);
 const schemaBr = new dbPromiseInterface('br');
 const schemaLog = new dbPromiseInterface('log');
 const dataStorage = `${__dirname}/data/waf_black_ip`;
+const helper = require(`${__dirname}/helper/helper`);
 const pushq = require(`${__dirname}/helper/pushq`);
 
 /**
@@ -18,12 +19,9 @@ async function fetchRows(fetchQueryFromStartingIdx) {
         rows = await schemaBr.query(fetchQueryFromStartingIdx);
         return rows;
     } catch (error) {
-        message = 
-            `[Klaytn]: failed to fetch brdaily rows
-            from ${process.argv[0]}
-            Let's try: node ${process.argv[0]} in shell to find bugs.`;
+        const message = helper.createErrorMessage('fetch rows from brdaily table', __filename);
         pushq.sendMessage(message);
-        throw(error);
+        throw new Error(error);
     }
 }
 
@@ -38,12 +36,9 @@ async function convertRowToJSON(rows) {
         try {
             fs.writeFileSync(`${dataStorage}/${parsedRow.idx}.json`, rowJsonString);
         } catch (error) {
-            message = 
-                `[Klaytn]: failed to convert brdaily row to JSON 
-                from ${process.argv[0]}
-                Let's try: node ${process.argv[0]} in shell to find bugs.`;
+            const message = helper.createErrorMessage('convert brdaily row to JSON', __filename);
             pushq.sendMessage(message);
-            throw(error);
+            throw new Error(error);
         }
     });
     console.log(`convert Row To JSON is ended`);
@@ -61,12 +56,9 @@ async function main() {
         const lastIdx = result[0].brdaily_idx;
         startIdx = lastIdx + 1;
     } catch (error) { 
-        message = 
-            `[Klaytn]: failed to query to Labs DB
-            from ${process.argv[0]}
-            Let's try: node ${process.argv[0]} in shell to find bugs.`;
+        const message = helper.createErrorMessage('query to Labs DB', __filename);
         pushq.sendMessage(message);
-        console.log(error);
+        throw new Error(error);
     }
     const size = constant.WORKLOAD;
 
@@ -80,14 +72,14 @@ async function main() {
     try {
         rows = await fetchRows(fetchQueryFromStartingIdx);
     } catch (error) {
-        console.log(error);
-        process.exit(1);
+        throw new Error(error);
     }
     try {
         await convertRowToJSON(rows);
     } catch (error) {
-        console.log(error);
-        process.exit(1);
+        const message = helper.createErrorMessage('fetch', __filename);
+        pushq.sendMessage(message);
+        throw new Error(error);
     }
     process.exit(1);
 }

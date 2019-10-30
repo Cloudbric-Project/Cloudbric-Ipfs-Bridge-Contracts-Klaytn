@@ -3,6 +3,7 @@ const readLastLines = require('read-last-lines');
 const caverConfig = require(`${__dirname}/../config/caver`);
 const contract = require(`${__dirname}/../config/contract`); 
 const helper = require(`${__dirname}/../helper/helper`);
+const pushq = require(`${__dirname}/../helper/pushq`);
 const colorBoard = require(`${__dirname}/../helper/color`);
 const common = require(`${__dirname}/common`);
 const dbPromiseInterface = require(`${__dirname}/../db/db_promise`);
@@ -29,7 +30,9 @@ async function addWhiteList(address, feePayer) {
         );
         return receipt;
     } catch (error) {
-        throw error;
+        const message = helper.createErrorMessage('', __filename);
+        pushq.sendMessage(message);
+        throw new Error(error);
     }
 }
 
