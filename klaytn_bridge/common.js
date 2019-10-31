@@ -27,7 +27,7 @@ async function getWhiteListAddIndexList() {
         `SELECT brdaily_idx FROM brdaily_uploaded_log \
         WHERE storage_transaction_hash IS NULL \
         AND whitelist_transaction_hash IS NULL \
-        ORDER BY brdaily_idx ASC LIMIT ${constant.WORKLOAD}`
+        ORDER BY brdaily_idx ASC LIMIT ${constant.WORKLOAD.WAF_BLACK_IP}`
     const rows = await schemaLog.query(getBrdailyIdxList);
     let brdailyIdxList = [];
     rows.forEach(row => {
@@ -61,7 +61,7 @@ async function getWafBlackIpAddIndexList() {
         `SELECT brdaily_idx FROM brdaily_uploaded_log \
         WHERE storage_transaction_hash IS NULL \
         AND whitelist_transaction_hash IS NOT NULL \
-        ORDER BY brdaily_idx ASC LIMIT ${constant.WORKLOAD}`
+        ORDER BY brdaily_idx ASC LIMIT ${constant.WORKLOAD.WAF_BLACK_IP}`
     const rows = await schemaLog.query(getBrdailyIdxList);
     let brdailyIdxList = [];
     rows.forEach(row => {
@@ -70,9 +70,39 @@ async function getWafBlackIpAddIndexList() {
     return brdailyIdxList;
 }
 
+async function getHackerWalletAddIndexList() {
+    const getHackerWalletIdxList =
+        `SELECT idx FROM hacker_wallet_uploaded_log \
+        WHERE storage_transaction_hash IS NULL \
+        AND whitelist_transaction_hash IS NOT NULL \
+        ORDER BY idx ASC LIMIT ${constant.WORKLOAD.THREAT_DB}`
+    const rows = await schemaLog.query(getHackerWalletIdxList);
+    let hackerWalletIdxList = [];
+    rows.forEach(row => {
+        hackerWalletIdxList.push(row.idx);
+    });
+    return hackerWalletIdxList;
+}
+
+async function getPhishingUrlAddIndexList() {
+    const getPhishingUrlIdxList =
+    `SELECT idx FROM phishing_url_uploaded_log \
+    WHERE storage_transaction_hash IS NULL \
+    AND whitelist_transaction_hash IS NOT NULL \
+    ORDER BY idx ASC LIMIT ${constant.WORKLOAD.THREAT_DB}`
+    const rows = await schemaLog.query(getPhishingUrlIdxList);
+    let phishingUrlIdxList = [];
+    rows.forEach(row => {
+        phishingUrlIdxList.push(row.idx);
+    });
+    return phishingUrlIdxList;
+}
+
 module.exports = {
     getWhiteListStartingBrdailyIndex: getWhiteListStartingBrdailyIndex,
     getWhiteListAddIndexList: getWhiteListAddIndexList,
     getWafBlackIpStartingBrdailyIndex: getWafBlackIpStartingBrdailyIndex,
-    getWafBlackIpAddIndexList: getWafBlackIpAddIndexList
+    getWafBlackIpAddIndexList: getWafBlackIpAddIndexList,
+    getHackerWalletAddIndexList: getHackerWalletAddIndexList,
+    getPhishingUrlAddIndexList: getPhishingUrlAddIndexList
 }

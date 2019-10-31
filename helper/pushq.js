@@ -13,7 +13,7 @@ const vault = parsedSecret.config;
  */
 function sendMessage(message, code) {
   if (code === null || code === undefined) {
-    code = 'cloudbric';
+    code = 'CB-DEV';
   }
   let formData = { 
       'uuid': vault.uuid,

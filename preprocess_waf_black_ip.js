@@ -60,7 +60,7 @@ async function main() {
         pushq.sendMessage(message);
         throw new Error(error);
     }
-    const size = constant.WORKLOAD;
+    const size = constant.WORKLOAD.WAF_BLACK_IP;
 
     const fetchQueryFromStartingIdx = 
         `SELECT * FROM brdaily \
