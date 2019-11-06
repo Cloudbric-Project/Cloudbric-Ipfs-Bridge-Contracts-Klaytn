@@ -5,6 +5,10 @@ const ipfsBridgePath = `${__dirname}/../ipfs_bridge`;
 const klaytnCommon = require(`${klaytnBridgePath}/common`);
 const ipfsCommon = require(`${ipfsBridgePath}/common`);
 
+// TODO:
+// Cloudbric do not use multi worker process right now.
+// When we need to process workload more fast, then we would use this process.
+
 /**
  * create a single work sheet of white list add transaction.
  * there is only one fee delegation account who actually send transaction to Klaytn.

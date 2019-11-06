@@ -70,6 +70,10 @@ async function getWafBlackIpAddIndexList() {
     return brdailyIdxList;
 }
 
+/**
+ * get index of the rows that should be inserted at CloudbricHackerWalletStorage standards.
+ * @return {Array} hackerWalletIdxList
+ */
 async function getHackerWalletAddIndexList() {
     const getHackerWalletIdxList =
         `SELECT idx FROM hacker_wallet_uploaded_log \

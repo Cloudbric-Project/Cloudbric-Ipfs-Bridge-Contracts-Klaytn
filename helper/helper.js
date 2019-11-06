@@ -251,7 +251,7 @@ const feeDelegatedSmartContractExecute = async(
 /**
  * create error message.
  * @param {String} message 
- * @param {String} filename
+ * @param {String} filename where error occurs
  */
 const createErrorMessage = (message, filename) => {
     if (!_.isString(message)) {

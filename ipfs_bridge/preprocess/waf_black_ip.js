@@ -16,7 +16,8 @@ async function preprocess() {
         // if so, you should execute failover logic.
         const getLastIdxQuery = "SELECT brdaily_idx FROM brdaily_uploaded_log ORDER BY brdaily_idx DESC LIMIT 1";
         const result = await schemaLog.query(getLastIdxQuery);
-        const lastIdx = result[0] == null ? 0 : result[0].idx;
+        console.log(result);
+        const lastIdx = result[0] == null ? 0 : result[0].brdaily_idx;
         startIdx = lastIdx + 1;
 
         console.log(startIdx);
@@ -36,7 +37,6 @@ async function preprocess() {
     console.log(`GET ${size} ROWS(BEGIN WITH ${startIdx}) AND CONVERT IT TO JSON`);
     try {
         rows = await common.fetchRows(schemaBr, fetchQueryFromStartingIdx);
-        console.log(rows);
     } catch (error) {
         throw new Error(error);
     }
