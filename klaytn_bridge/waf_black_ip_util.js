@@ -39,7 +39,7 @@ async function addWafBlackIpUsingList() {
         
     console.log(`${colorBoard.FgWhite}Start... from ${brdailyIdxList[0]} to ${brdailyIdxList[length - 1]}`);
     for (let i = 0; i < length; i++) {
-		console.log(`workQuota: ${workQuota}`)
+		console.log(`workQuote: ${workQuote}`)
         if (i >= workQuote) {
             break;
         }
