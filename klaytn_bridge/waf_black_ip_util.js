@@ -26,9 +26,7 @@ async function addWafBlackIpUsingList() {
     const tomorrowYmd = dateFormat(tomorrow, "UTC:yyyy-mm-dd");
 
     const getWorkQuoteQuery = `SELECT COUNT(*) FROM brdaily_uploaded_log 
-        WHERE storage_transaction_hash IS NULL 
-        AND whitelist_uploaded_date >= '${todayYmd}' 
-        AND whitelist_uploaded_date < '${tomorrowYmd}'`;
+    WHERE storage_transaction_hash IS NULL` 
    
     let workQuote = 0;
     try {
@@ -41,6 +39,7 @@ async function addWafBlackIpUsingList() {
         
     console.log(`${colorBoard.FgWhite}Start... from ${brdailyIdxList[0]} to ${brdailyIdxList[length - 1]}`);
     for (let i = 0; i < length; i++) {
+		console.log(`workQuota: ${workQuota}`)
         if (i >= workQuote) {
             break;
         }
