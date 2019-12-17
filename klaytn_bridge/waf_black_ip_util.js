@@ -25,8 +25,9 @@ async function addWafBlackIpUsingList() {
     const todayYmd = dateFormat(now, "UTC:yyyy-mm-dd");
     const tomorrowYmd = dateFormat(tomorrow, "UTC:yyyy-mm-dd");
 
+    // TODO: storage_contract_address가 아니라 hash로 판단해야 하는데 현재 버그픽스가 최우선 사항이여 일단 해결 뒤 보강
     const getWorkQuoteQuery = `SELECT COUNT(*) FROM brdaily_uploaded_log 
-    WHERE storage_transaction_hash IS NULL` 
+    WHERE storage_contract_address IS NULL` 
    
     let workQuote = 0;
     try {

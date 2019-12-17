@@ -59,7 +59,7 @@ async function getWafBlackIpStartingBrdailyIndex () {
 async function getWafBlackIpAddIndexList() {
     const getBrdailyIdxList =
         `SELECT brdaily_idx FROM brdaily_uploaded_log \
-        WHERE storage_transaction_hash IS NULL \
+        WHERE storage_contract_address IS NULL \
         AND whitelist_transaction_hash IS NOT NULL \
         ORDER BY brdaily_idx ASC LIMIT ${constant.WORKLOAD.WAF_BLACK_IP}`
     const rows = await schemaLog.query(getBrdailyIdxList);
