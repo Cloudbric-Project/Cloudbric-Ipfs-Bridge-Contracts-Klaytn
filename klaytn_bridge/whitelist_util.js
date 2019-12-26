@@ -1,17 +1,18 @@
 const fs = require('fs');
 const readLastLines = require('read-last-lines');
-const caverConfig = require(`${__dirname}/../config/caver`);
-const contract = require(`${__dirname}/../config/contract`); 
-const helper = require(`${__dirname}/../helper/helper`);
-const pushq = require(`${__dirname}/../helper/pushq`);
-const colorBoard = require(`${__dirname}/../helper/color`);
+const caverConfig = require(path.join(APP_ROOT_DIR, 'config/caver'))
+const contract = require(path.join(APP_ROOT_DIR, 'config/contract'))
+const helper = require(path.join(APP_ROOT_DIR, 'config/helper'))
+// TODO: Error handle with pushq properly
+const pushq = require(path.join(APP_ROOT_DIR, 'helper/pushq'))
+// TODO: Delete common
 const common = require(`${__dirname}/common`);
-const dbPromiseInterface = require(`${__dirname}/../db/db_promise`);
-const schemaLog = new dbPromiseInterface('log');
+const dbPromiseInterface = require(path.join(APP_ROOT_DIR, 'db/db_promise'))
 
 const caver = caverConfig.caver;
 const vault = caverConfig.vault;
 const whiteList = contract.whiteList; 
+const schemaLog = new dbPromiseInterface('log');
 
 async function addWhiteList(address, feePayer) { 
     let abiAddWhiteList = 
@@ -48,14 +49,14 @@ async function addWhiteListUsingList() {
     await caver.klay.accounts.wallet.create(length);
 
     for (let i = 0; i < length; i++) {
-        console.log(`${colorBoard.FgGreen}++++++++++++++++++++++++++++++++++++++${colorBoard.FgWhite}${i}'th Iteration ${brdailyIdxList[i]} / ${colorBoard.FgRed}${brdailyIdxList[length - 1]}${colorBoard.FgGreen}++++++++++++++++++++++++++++++++++++++`);
+        console.log(`++++++++++++++++++++++++++++++++++++++${i}'th Iteration ${brdailyIdxList[i]} / ${colorBoard.FgRed}${brdailyIdxList[length - 1]}++++++++++++++++++++++++++++++++++++++`);
         const key = caver.klay.accounts.wallet.getKlaytnWalletKey(i + 1);
         const account = {
             "address": key.slice(70,140),
             "privateKey": key.slice(0,66)
         }
-        console.log(`${colorBoard.FgWhite}address: ${colorBoard.FgCyan} ${account.address}`);
-        console.log(`${colorBoard.FgWhite}privateKey: ${colorBoard.FgCyan} ${account.privateKey}`);
+        console.log(`address: ${account.address}`);
+        console.log(`privateKey: ${account.privateKey}`);
         let receipt = null;
         try {
             receipt = await addWhiteList(account.address, feePayer);
@@ -66,7 +67,7 @@ async function addWhiteListUsingList() {
         }
 
         const whiteListTxHash = receipt.transactionHash;
-        console.log(`${colorBoard.FgWhite}whiteListTxHash: ${colorBoard.FgYellow} ${whiteListTxHash}`);
+        console.log(`whiteListTxHash: ${whiteListTxHash}`);
 
         let uploadedDate = new Date().toISOString(); // UTC format
         uploadedDate = uploadedDate.replace(/T/, ' ').replace(/\..+/, '');
@@ -86,7 +87,7 @@ async function addWhiteListUsingList() {
             console.log(error);
             process.exit(1);
         }
-        console.log(`${colorBoard.FgRed}--------------------------------------${colorBoard.FgWhite}${i}'th Iteration ${colorBoard.FgRed}--------------------------------------`); 
+        console.log(`--------------------------------------${i}'th Iteration--------------------------------------`); 
     }
     process.exit(1);
 }

@@ -1,8 +1,8 @@
-const _ = require('underscore');
-const bs58 = require('bs58');
-const constant = require('../config/constant');
-const caverConfig = require('../config/caver');
-const caver = caverConfig.caver;
+const _ = require('underscore')
+const bs58 = require('bs58')
+const constant = require('../config/constant')
+const caverConfig = require('../config/caver')
+const caver = caverConfig.caver
 
 /**
  * create Solidity data type bytes32 from Javascript String data type.
@@ -14,11 +14,11 @@ const caver = caverConfig.caver;
  */
 const stringToBytes32 = (stringData) => {
     if (!_.isString(stringData)) {
-        throw new Error(`The parameter ${stringData} must be a valid string.`);
+        throw new Error(`The parameter ${stringData} must be a valid string.`)
     }
-    hexConverted = caver.utils.asciiToHex(stringData);
-    bytes32 = caver.utils.padRight(hexConverted, 64);
-    return bytes32;
+    hexConverted = caver.utils.asciiToHex(stringData)
+    bytes32 = caver.utils.padRight(hexConverted, 64)
+    return bytes32
 }
 
 /**
@@ -30,10 +30,10 @@ const stringToBytes32 = (stringData) => {
  */
 const bytes32ToString = (bytes32) => {
     if (!_.isString(bytes32)) {
-        throw new Error(`The parameter ${stringData} must be a valid HEX string.`);
+        throw new Error(`The parameter ${stringData} must be a valid HEX string.`)
     }
-    ascii = caver.utils.hexToAscii(bytes32);
-    return ascii;
+    ascii = caver.utils.hexToAscii(bytes32)
+    return ascii
 }
 
 /**
@@ -49,20 +49,20 @@ const bytes32ToString = (bytes32) => {
  */
 const multihashToIpfsHash = (multiHash) => {
     if(!_.isObject(multiHash)) {
-        throw new Error(`The parameter ${multiHash} must be a valid Object.`);
+        throw new Error(`The parameter ${multiHash} must be a valid Object.`)
     }
-    const requiredFields = ['hashFunction', 'size', 'hash'];
-    const fields = _.allKeys(multiHash);
+    const requiredFields = ['hashFunction', 'size', 'hash']
+    const fields = _.allKeys(multiHash)
     requiredFields.forEach(field => {
         if(_.indexOf(fields, field) === -1)
-            throw new Error(`The parameter ${mutlihash} must have a valid fields.`);
-    });
+            throw new Error(`The parameter ${mutlihash} must have a valid fields.`)
+    })
     
-    const decodedHexString = multiHash.hashFunction + multiHash.size + multiHash.hash;
-    const bytes = Buffer.from(decodedHexString, 'hex');
-    const ipfsHash = bs58.encode(bytes);
+    const decodedHexString = multiHash.hashFunction + multiHash.size + multiHash.hash
+    const bytes = Buffer.from(decodedHexString, 'hex')
+    const ipfsHash = bs58.encode(bytes)
 
-    return ipfsHash;
+    return ipfsHash
 }
 
 /**
@@ -78,9 +78,9 @@ const multihashToIpfsHash = (multiHash) => {
  */
 const ipfsHashToMultihash = (ipfsHash) => {
     if (!_.isString(ipfsHash)) {
-        throw new Error(`The parameter ${ipfsHash} must be a valid string.`);
+        throw new Error(`The parameter ${ipfsHash} must be a valid string.`)
     }
-    const decodedHexString = bs58.decode(ipfsHash).toString('hex');
+    const decodedHexString = bs58.decode(ipfsHash).toString('hex')
     
     return {
         hashFunction: decodedHexString.slice(0,2),
@@ -95,13 +95,13 @@ const ipfsHashToMultihash = (ipfsHash) => {
  * @return {String} random hex string.
  */
 const createRandomHexString = (length) => {
-    var result = '';
-    var characters = 'ABCDEF0123456789';
-    var charactersLength = characters.length;
+    var result = ''
+    var characters = 'ABCDEF0123456789'
+    var charactersLength = characters.length
     for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        result += characters.charAt(Math.floor(Math.random() * charactersLength))
     }
-    return result;
+    return result
 }
 
 /**
@@ -111,7 +111,7 @@ const createRandomHexString = (length) => {
  */
 const createDummy = (idx) => {
     if (!_.isNumber(idx)) {
-        throw new Error(`The parameter ${ipfsHash} must be a valid number.`);
+        throw new Error(`The parameter ${ipfsHash} must be a valid number.`)
     }
     return {
         clbIndex: 210511986 + idx,
@@ -140,14 +140,14 @@ const createDummy = (idx) => {
  */
 const encodeDataSet = (dataSet) => {
     if (!_.isObject(dataSet)) {
-        throw new Error(`The parameter ${dataSet} must be a valid Object.`);
+        throw new Error(`The parameter ${dataSet} must be a valid Object.`)
     }
-    const requiredFields = ['clbIndex', 'hash', 'hashFunction'];
-    const fields = _.allKeys(dataSet);
+    const requiredFields = ['clbIndex', 'hash', 'hashFunction']
+    const fields = _.allKeys(dataSet)
     requiredFields.forEach(field => {
         if (_.indexOf(fields, field) === -1)
-            throw new Error(`The parameter ${dataSet} must have a valid fields.`);
-    });
+            throw new Error(`The parameter ${dataSet} must have a valid fields.`)
+    })
     return {
         encodedClbIndex: stringToBytes32(String(dataSet.clbIndex)),
         encodedHash: '0x' + dataSet.hash,
@@ -173,15 +173,15 @@ const encodeDataSet = (dataSet) => {
  */
 const decodeMultihash = (multihash) => {
     if(!_.isObject(multiHash)) {
-        throw new Error(`The parameter ${multiHash} must be a valid Object.`);
+        throw new Error(`The parameter ${multiHash} must be a valid Object.`)
     }
-    const requiredFields = ['hashFunction', 'size', 'hash'];
-    const fields = _.allKeys(multiHash);
+    const requiredFields = ['hashFunction', 'size', 'hash']
+    const fields = _.allKeys(multiHash)
     requiredFields.forEach(field => {
         if(_.indexOf(fields, field) === -1)
-            throw new Error(`The parameter ${mutlihash} must have a valid fields.`);
-    });
-    console.log(multihash);
+            throw new Error(`The parameter ${mutlihash} must have a valid fields.`)
+    })
+    console.log(multihash)
     return {
         hash: multihash.hash.slice(2),
         hashFunction: multihash.hash_function.toString(),
@@ -206,16 +206,16 @@ const feeDelegatedSmartContractExecute = async(
     abiOfMethod
 ) => {
     if (!caver.utils.isAddress(fromAddress)) {
-        throw new Error(`The parameter ${fromAddress} must be a valid address`);
+        throw new Error(`The parameter ${fromAddress} must be a valid address`)
     } else if (!caver.utils.isAddress(to)) {
-        throw new Error(`The parameter ${to} must be a valid address`);
+        throw new Error(`The parameter ${to} must be a valid address`)
     } else if (!caver.utils.isAddress(feePayer.address)) {
-        throw new Error(`The parameter ${feePayer.address} must be a valid address`);
-    };
+        throw new Error(`The parameter ${feePayer.address} must be a valid address`)
+    }
 
     if (!caver.utils.isHex(fromPrivateKey)) {
-        throw new Error(`The parameter ${fromAddress} must be a valid HEX string`);
-    };
+        throw new Error(`The parameter ${fromAddress} must be a valid HEX string`)
+    }
 
     let feeDelegatedSmartContractObject = {
         type: 'FEE_DELEGATED_SMART_CONTRACT_EXECUTION',
@@ -223,29 +223,29 @@ const feeDelegatedSmartContractExecute = async(
         to: to,
         data: abiOfMethod,
         gas: constant.GAS_LIMIT,
-    };
+    }
 
-    let rlpEncodedTransaction = null;
+    let rlpEncodedTransaction = null
     try {
         rlpEncodedTransaction = await caver.klay.accounts.signTransaction(
             feeDelegatedSmartContractObject,
             fromPrivateKey
-        );
+        )
     } catch (error) {
-        console.log(error);
-        throw Error(error);
+        console.log(error)
+        throw Error(error)
     }
 
-    let receipt = null;
+    let receipt = null
     try {
         receipt = await caver.klay.sendTransaction({
             senderRawTransaction: rlpEncodedTransaction.rawTransaction,
             feePayer: feePayer.address
-        });
+        })
     } catch (error) {
-        throw Error(error);
+        throw Error(error)
     }
-    return receipt;
+    return receipt
 }
 
 /**
@@ -255,13 +255,13 @@ const feeDelegatedSmartContractExecute = async(
  */
 const createErrorMessage = (message, filename) => {
     if (!_.isString(message)) {
-        throw new Error(`The parameter ${message} must be a valid HEX string`);
+        throw new Error(`The parameter ${message} must be a valid HEX string`)
     }
     const template = 
         `[Klaytn] failed to ${message}
-        Check ${filename}\` in shell to sovle issue.`;
+        Check ${filename}\` in shell to sovle issue.`
 
-    return template;
+    return template
 }
 
 module.exports = {

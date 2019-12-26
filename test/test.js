@@ -1,5 +1,7 @@
-const caverConfig = require('../config/caver');
-const helper = require('../helper/helper');
+const path = require('path')
+const APP_ROOT_DIR = path.join(__dirname, '..')
+const caverConfig = require(path.join(APP_ROOT_DIR, 'config/caver'))
+const helper = require(path.join(APP_ROOT_DIR, 'helper/helper'))
 
 const caver = caverConfig.caver;
 

@@ -1,19 +1,21 @@
-const fs = require('fs');
-const request = require('request');
+const fs = require('fs')
+const path = require('path')
+const request = require('request')
 
-const pushqSecret = fs.readFileSync(`${__dirname}/../private/.pushq.json`).toString();
-const parsedSecret = JSON.parse(pushqSecret);
-const vault = parsedSecret.config;
+const APP_ROOT_DIR = path.join(__dirname, '..')
+const pushq = fs.readFileSync(path.join(APP_ROOT_DIR, 'private/.pushq.json')).toString()
+const pushqSecret = JSON.parse(pushq)
+const vault = pushqSecret.config
 
 /**
  * send <message> to pushq group <code> 
- * @param {String} message 
+ * @param {String} message
  * @param {String} code
  * @return {Promise} Promise object represents the response body
  */
 function sendMessage(message, code) {
   if (code === null || code === undefined) {
-    code = 'CB-DEV';
+    code = 'CB-DEV'
   }
   let formData = { 
       'uuid': vault.uuid,
@@ -23,14 +25,16 @@ function sendMessage(message, code) {
   };
 
   return new Promise((resovle, reject) => {
-    request.post({url: 'http://push.doday.net/api/push', formData: formData}, function optionalCallback(error, httpResponse, body) {
+    request.post({
+      url: 'http://push.doday.net/api/push', formData: formData}, 
+      function optionalCallback(error, httpResponse, body) {
         if (error) {
           reject(error)
         } else {
-          resovle(body);
+          resovle(body)
         }
-      });
-  });
+      })
+  })
 }
 
 module.exports = {

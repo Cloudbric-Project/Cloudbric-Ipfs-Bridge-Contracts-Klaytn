@@ -1,77 +1,210 @@
-const dateFormat = require('dateformat');
-const caverConfig = require(`${__dirname}/../config/caver`);
-const contract = require(`${__dirname}/../config/contract`); 
-const helper = require(`${__dirname}/../helper/helper`);
-const pushq = require(`${__dirname}/../helper/pushq`);
-const colorBoard = require(`${__dirname}/../helper/color`);
-const common = require(`${__dirname}/common`);
-const dbPromiseInterface = require(`${__dirname}/../db/db_promise`);
-const schemaLog = new dbPromiseInterface('log');
+/**
+ * Description: 
+ *   Black ip data detected by Cloudbric WAF is collected every day.
+ *   Amount of cumulated data is about 400,000 per day.
+ *   The way Cloudbric share these valuable data to community is 
+ *     1. Store original data to IPFS.
+ *     2. Store cid of IPFS to Klaytn Smart Contract.
+ *    This script is a script of Step 2.
+ */
+
+const path = require('path')
+const APP_ROOT_DIR = path.join(__dirname, '..')
+const caverConfig = require(path.join(APP_ROOT_DIR, 'config/caver'))
+const contract = require(path.join(APP_ROOT_DIR, 'config/contract'))
+const helper = require(path.join(APP_ROOT_DIR, 'helper/helper'))
+// TODO: Error handle with pushq properly
+const pushq = require(path.join(APP_ROOT_DIR, 'helper/pushq'))
+const constant = require(path.join(APP_ROOT_DIR, 'config/constant'))
+const dbPromiseInterface = require(path.join(APP_ROOT_DIR, 'db/db_promise'))
 
 const vault = caverConfig.vault;
 const caver = caverConfig.caver;
 const cloudbricWafBlackIpStorage = contract.cloudbricWafBlackIpStorage;
+const schemaLog = new dbPromiseInterface('log');
 
-async function addWafBlackIpUsingList() {
-    const feePayer = await caver.klay.accounts.wallet.add(
-        vault.cypress.accounts.delegate.privateKey,
-        vault.cypress.accounts.delegate.address
-    );
-    const brdailyIdxList = await common.getWafBlackIpAddIndexList();
-    const length = brdailyIdxList.length;
-
-    const now = new Date();
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    const todayYmd = dateFormat(now, "UTC:yyyy-mm-dd");
-    const tomorrowYmd = dateFormat(tomorrow, "UTC:yyyy-mm-dd");
-
-    // TODO: storage_contract_address가 아니라 hash로 판단해야 하는데 현재 버그픽스가 최우선 사항이여 일단 해결 뒤 보강
-    const getWorkQuoteQuery = `SELECT COUNT(*) FROM brdaily_uploaded_log 
-    WHERE storage_contract_address IS NULL` 
-   
-    let workQuote = 0;
+/**
+ * Get brdailyIdx need to be inserted to smart contract.
+ * @return {String}
+ */
+async function _getBrdailyIdxToBeAdded() {
+    const query = 
+        `SELECT brdaily_idx FROM brdaily_uploaded_log \
+        WHERE storage_transaction_hash IS NULL \
+        AND whitelist_transaction_hash IS NOT NULL \
+        ORDER BY brdaily_idx ASC LIMIT 1`
+    let result = undefined 
+    let brdailyIdx = undefined
     try {
-        const result = await schemaLog.query(getWorkQuoteQuery);
-        workQuote = result[0]['COUNT(*)'] - 1;
-    } catch (error) {
-        console.log(error);
+        result = await schemaLog.query(query)
+        brdailyIdx =  result[0].brdaily_idx
+    } catch (err) {
+        console.log(err)
+        exit(1)
+    }
+
+    if (result == undefined || brdailyIdx == undefined) {
+        console.log(`Select nothing, maybe there is logical error`)
+        exit(1)
+    }
+    return brdailyIdx
+}
+
+/**
+ * Get black ip detected by Cloudbric WAF.
+ * @param {String | Number} clbIndex index in Cloudbric DB
+ * @return {Object}
+ */
+async function getWafBlackIpAtClbIndex(clbIndex) {
+    if (typeof clbIndex === "number") {
+        clbIndex = clbIndex.toString()
+    }
+    const wafBlackIp = await cloudbricWafBlackIpStorage.methods.getWafBlackIpAtClbIndex(
+        helper.stringToBytes32(clbIndex)
+    ).call()
+    return wafBlackIp
+}
+
+/**
+ * Check whether black ip data already exsits in smart contract "CloudbricWafBlackIpStorage".
+ * @param {String | Number} clbIndex same with brdailyIdx but generally it also called "clbIndex"
+ * @return {Boolean}
+ */
+async function _exsitsInSmartContract(clbIndex) {
+    if (typeof clbIndex === "number") {
+        clbIndex = clbIndex.toString()
+    }
+    const wafBlackIp = await cloudbricWafBlackIpStorage.methods.getWafBlackIpAtClbIndex(
+        helper.stringToBytes32(clbIndex)
+    ).call()
+    
+    if (wafBlackIp == undefined || wafBlackIp == null) {
+        return false
+    }
+    return true
+}
+
+/**
+ * Check wether crash exsits or not. If so restore crash.
+ * @param {String} brdailyIdx 
+ */
+async function _restoreCrash(brdailyIdx) {
+    let crashExsits = false
+    try {
+        crashExsits = _exsitsInSmartContract(brdailyIdx)
+        if (crashExsits) {
+            // data exsits in Cloudbric database and Smart contract also, means OK
+            console.log('data exsits in Cloudbric database and Smart contract also, means OK')
+        } else {
+            // FIX ME: restoring crash must include below steps.
+            // 1. Search block related with lastInsertedBrdailyIdx.
+            // 2. Update uploaded date with date when block created.
+            // 3. To do, we should write some code to track events.
+            const updateQuery = `UPDATE brdaily_uploaded_log \
+                SET storage_contract_address='${cloudbricWafBlackIpStorage._address}', \
+                waf_black_ip_uploaded_date='${uploaded_date}' \
+                WHERE brdaily_idx='${brdailyIdx}'`
+            await schemaLog.query(updateQuery)
+        }
+    } catch (err) {
+        console.log(err)
+        process.exit(1)
+    }
+}
+
+/**
+ * Get list of index to be added to blockchain.
+ * @return {Array<Number>}
+ */
+async function _getBrdailyIdxListToBeAdded() {
+    const getBrdailyIdxList =
+        `SELECT brdaily_idx FROM brdaily_uploaded_log \
+        WHERE storage_contract_address IS NULL \
+        AND whitelist_transaction_hash IS NOT NULL \
+        ORDER BY brdaily_idx ASC LIMIT ${constant.WORKLOAD.WAF_BLACK_IP}`
+    const rows = await schemaLog.query(getBrdailyIdxList);
+    let brdailyIdxList = [];
+    rows.forEach(row => {
+        brdailyIdxList.push(row.brdaily_idx);
+    });
+    return brdailyIdxList;
+}
+
+
+/**
+ * Scan whole black ip data which is detected by Cloudbric WAF and print to console.
+ */
+async function scanWafBlackIpStorage() {
+    const wafBlackIpListSize = await cloudbricWafBlackIpStorage.methods.wafBlackIpListSize().call();
+    console.log(wafBlackIpListSize);
+
+    let wafBlackIp = undefined
+    for (let i = 0; i < wafBlackIpListSize; i++) {
+        wafBlackIp = await cloudbricWafBlackIpStorage.methods.getWafBlackIpAtIndex(i).call();
+   }
+}
+
+/**
+ * Get cid(contents identifier) info which is consists of below 3 fields.
+ * 1. ipfs_cid: cid of IPFS contents which means black ip detected by Cloudbric WAF.
+ * 2. from_address: who upload black ip to IPFS.
+ * 3. from_private_key: private key of address.
+ * @param {String | Number} brdailyIdx 
+ * @return {Object}
+ */
+async function _getIpfsCidInfo(brdailyIdx) {
+    const selectCidQuery = `SELECT ipfs_cid, from_address, from_private_key \
+        FROM brdaily_uploaded_log \
+        WHERE brdaily_idx=${brdailyIdx}`
+    const cidResult = await schemaLog.query(selectCidQuery)
+    
+    if (cidResult[0].ipfs_cid == null || cidResult[0].from_address == null || cidResult[0].from_private_key == null) {
+        console.log(`No data at given brdaily_idx: ${brdailyIdx}`);
         process.exit(1);
     }
-        
-    console.log(`${colorBoard.FgWhite}Start... from ${brdailyIdxList[0]} to ${brdailyIdxList[length - 1]}`);
-    for (let i = 0; i < length; i++) {
-		console.log(`workQuote: ${workQuote}`)
-        if (i >= workQuote) {
-            break;
-        }
-        console.log(`${colorBoard.FgGreen}++++++++++++++++++++++++++++++++++++++${colorBoard.FgWhite}${i}'th Iteration ${brdailyIdxList[i]} / ${colorBoard.FgRed}${brdailyIdxList[length - 1]}${colorBoard.FgGreen}++++++++++++++++++++++++++++++++++++++`); 
-        // select from db and encode data
-        const selectCidQuery = `SELECT ipfs_cid, from_address, from_private_key FROM brdaily_uploaded_log WHERE brdaily_idx=${brdailyIdxList[i]}`
-        console.log(`${colorBoard.FgWhite}selectCidQuery`);
-        const cidResult = await schemaLog.query(selectCidQuery);
-        console.log(cidResult);
+    return cidResult[0]
+}
 
-        const ipfsCid = cidResult[0].ipfs_cid;
-        const address = cidResult[0].from_address;
-        const privateKey = cidResult[0].from_private_key; 
+/**
+ * Check wether crash exsits or not and take action properly.
+ * @return {String} brdailyIndex need to be inserted into smart contract.
+ */
+async function setupProcess() {
+    let brdailyIdx = await _getBrdailyIdxToBeAdded()
+    await _restoreCrash(brdailyIdx)
+}
 
-        if (ipfsCid == null || address == null || privateKey == null) {
-            `None matching data with brdaily_idx: ${brdailyIdxList[i]}`
-            console.log("Somethings going wrong... It should be existed");
-            process.exit(1);
-        }
+/**
+ * Add multiple black ip data which is detected by Cloudbric WAF sequnetially.
+ */
+async function addWafBlackIpBatch() {
+    let feePayer = undefined
+    try {
+        feePayer = await caver.klay.accounts.wallet.add(
+            vault.cypress.accounts.delegate.privateKey,
+            vault.cypress.accounts.delegate.address
+        );
+    } catch (err) {
+        console.log(err)
+    }
 
-        const multihash = helper.ipfsHashToMultihash(ipfsCid);
+    const brdailyIdxList = await _getBrdailyIdxListToBeAdded();
+    let brdailyIdx = undefined
+
+    for (let i = 0; i < brdailyIdxList.length; i++) {
+        brdailyIdx = brdailyIdxList[i]
+        console.log(brdailyIdx)
+        const ipfsCidInfo = await _getIpfsCidInfo(brdailyIdx)
+        const multihash = helper.ipfsHashToMultihash(ipfsCidInfo.ipfs_cid)
+        console.log(multihash)
 
         const dataSet = {
-            clbIndex: brdailyIdxList[i],
+            clbIndex: brdailyIdx,
             hash: multihash.hash,
             hashFunction: multihash.hashFunction,
-            size: multihash.size    
+            size: multihash.size
         }
         const encodedDataSet = helper.encodeDataSet(dataSet);
-        console.log(encodedDataSet);
-
         const abiAddWafBlackIp = 
             cloudbricWafBlackIpStorage.methods.addWafBlackIp(
                 encodedDataSet.encodedClbIndex, 
@@ -79,69 +212,46 @@ async function addWafBlackIpUsingList() {
                 encodedDataSet.encodedHashFunction, 
                 encodedDataSet.encodedSize
             ).encodeABI();
-       
-        console.log(`${colorBoard.FgWhite}addWafBlackIp Transaction Execute...`);
-        let receipt = null;
+
+        let receipt = undefined;
         try {
             receipt = await helper.feeDelegatedSmartContractExecute(
-                address,
-                privateKey,
+                ipfsCidInfo.from_address,
+                ipfsCidInfo.from_private_key,
                 cloudbricWafBlackIpStorage._address,
                 feePayer,
                 abiAddWafBlackIp
             );
         } catch (error) {
-            
             console.log(error);
             process.exit(1);
         }
         
-        const wafBlackIpStorageTxHash = receipt.transactionHash;
-        console.log(`${colorBoard.FgWhite}cloudbricWafBlackIpTxHash: ${colorBoard.FgYellow}${wafBlackIpStorageTxHash}`);
-
         let uploaded_date = new Date().toISOString(); // UTC format
-        uploaded_date = uploaded_date.replace(/T/, ' ').replace(/\..+/, '');
+        uploaded_date = uploaded_date.replace(/T/, ' ').replace(/\..+/, '')
 
         const updateQuery = `UPDATE brdaily_uploaded_log \
             SET storage_contract_address='${cloudbricWafBlackIpStorage._address}', \
-            storage_transaction_hash='${wafBlackIpStorageTxHash}', \
+            storage_transaction_hash='${receipt.transactionHash}', \
             waf_black_ip_uploaded_date='${uploaded_date}' \
-            WHERE brdaily_idx='${brdailyIdxList[i]}'`
+            WHERE brdaily_idx='${brdailyIdx}'`
 
+        // MySQL server close connection sometimes. Query statement printed is useful when things happen.
+        console.log(updateQuery)
         try {
             await schemaLog.query(updateQuery);
         } catch (error) {
             console.log(error);
             process.exit(1);
         }
-        console.log(`${colorBoard.FgRed}--------------------------------------${colorBoard.FgWhite}${i}'th Iteration ${length - i + 1} remained.${colorBoard.FgRed}--------------------------------------${colorBoard.FgWhite}`); 
+
     }
-    process.exit(1);
 }
 
-async function scanWafBlackIpStorage() {
-    let wafBlackIpListSize = await cloudbricWafBlackIpStorage.methods.wafBlackIpListSize().call();
-    console.log("wafBlackIpListSize:");
-    console.log(wafBlackIpListSize);
-
-    for (let i = 0; i < wafBlackIpListSize; i++) {
-        console.log(`${i}'th Iteration ++++++++++++++++++++++++++++++++++++++`); 
-        let wafBlackIp = await cloudbricWafBlackIpStorage.methods.getWafBlackIpAtIndex(i).call();
-        console.log("wafBlackIp:");
-        console.log(wafBlackIp);
-        console.log(`${i}'th Iteration --------------------------------------`); 
-   }
-}
-
-async function getWafBlackIpAtClbIndex(clbIndex) {
-    let wafBlackIp = await cloudbricWafBlackIpStorage.methods.getWafBlackIpAtClbIndex(
-        helper.stringToBytes32(clbIndex)
-    ).call();
-    console.log(wafBlackIp)
-}
-
-module.exports = {
-    addWafBlackIpUsingList: addWafBlackIpUsingList,
-    scanWafBlackIpStorage: scanWafBlackIpStorage,
-    getWafBlackIpAtClbIndex: getWafBlackIpAtClbIndex
-}
+(async function () {
+    if (process.argv[2] == 'add') {
+        console.log('add batch start...')
+        await setupProcess()
+        await addWafBlackIpBatch()
+    }
+})();
