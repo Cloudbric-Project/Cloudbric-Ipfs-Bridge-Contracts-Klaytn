@@ -1,5 +1,7 @@
 const fs = require('fs');
 const readLastLines = require('read-last-lines');
+const path = require('path')
+const APP_ROOT_DIR = path.join(__dirname, '..')
 const caverConfig = require(path.join(APP_ROOT_DIR, 'config/caver'))
 const contract = require(path.join(APP_ROOT_DIR, 'config/contract'))
 const helper = require(path.join(APP_ROOT_DIR, 'config/helper'))
