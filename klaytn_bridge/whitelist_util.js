@@ -1,26 +1,27 @@
-const fs = require('fs');
-const readLastLines = require('read-last-lines');
 const path = require('path')
 const APP_ROOT_DIR = path.join(__dirname, '..')
 const caverConfig = require(path.join(APP_ROOT_DIR, 'config/caver'))
 const contract = require(path.join(APP_ROOT_DIR, 'config/contract'))
-const helper = require(path.join(APP_ROOT_DIR, 'config/helper'))
-// TODO: Error handle with pushq properly
+const helper = require(path.join(APP_ROOT_DIR, 'helper/helper'))
 const pushq = require(path.join(APP_ROOT_DIR, 'helper/pushq'))
-// TODO: Delete common
-const common = require(`${__dirname}/common`);
+const constant = require(path.join(APP_ROOT_DIR, 'config/constant'))
 const dbPromiseInterface = require(path.join(APP_ROOT_DIR, 'db/db_promise'))
 
-const caver = caverConfig.caver;
-const vault = caverConfig.vault;
-const whiteList = contract.whiteList; 
-const schemaLog = new dbPromiseInterface('log');
+const caver = caverConfig.caver
+const vault = caverConfig.vault
+const whiteList = contract.whiteList 
+const schemaLog = new dbPromiseInterface('log')
 
+/**
+ * Add single address to Cloudbric's WhiteList smart contract.
+ * @param {String} address 
+ * @param {Object} feePayer 
+ */
 async function addWhiteList(address, feePayer) { 
     let abiAddWhiteList = 
         whiteList.methods.addWhiteList(
             address
-        ).encodeABI();
+        ).encodeABI()
 
     // only deployer can add user to whitelist
     try {
@@ -30,158 +31,113 @@ async function addWhiteList(address, feePayer) {
             whiteList._address,
             feePayer,
             abiAddWhiteList
-        );
-        return receipt;
+        )
+        return receipt
     } catch (error) {
-        const message = helper.createErrorMessage('', __filename);
-        pushq.sendMessage(message);
-        throw new Error(error);
+        const message = helper.createErrorMessage('', __filename)
+        pushq.sendMessage(message)
+        throw new Error(error)
     }
 }
 
+
+/**
+ * Get index to be added to blockchain.
+ * @return {Number}
+ */
+async function _getWhiteListIndexToBeAdded() {
+    const query = 
+        `SELECT brdaily_idx FROM brdaily_uploaded_log \
+        WHERE storage_transaction_hash IS NULL \
+        AND whitelist_transaction_hash IS NULL \
+        ORDER BY brdaily_idx ASC LIMIT 1`
+    const result = await schemaLog.query(query)
+    const brdailyIdx = result[0].brdaily_idx
+
+    return brdailyIdx
+}
+
+/**
+ * Get list of index to be added to blockchain.
+ * @return {Array<Number>}
+ */
+async function _getWhiteListIndexListToBeAdded() {
+    const getBrdailyIdxList =
+        `SELECT brdaily_idx FROM brdaily_uploaded_log \
+        WHERE storage_transaction_hash IS NULL \
+        AND whitelist_transaction_hash IS NULL \
+        ORDER BY brdaily_idx ASC LIMIT ${constant.WORKLOAD.WAF_BLACK_IP}`
+    const rows = await schemaLog.query(getBrdailyIdxList)
+    let brdailyIdxList = []
+    rows.forEach(row => {
+        brdailyIdxList.push(row.brdaily_idx)
+    })
+    return brdailyIdxList
+}
+
+/**
+ * Add user who uploaded black ip data to IPFS to WhiteList
+ */
 async function addWhiteListUsingList() {
     const feePayer = await caver.klay.accounts.wallet.add(
         vault.cypress.accounts.delegate.privateKey,
         vault.cypress.accounts.delegate.address
-    );
-    const brdailyIdxList = await common.getWhiteListAddIndexList(); 
-    const length = brdailyIdxList.length;
+    )
+    const brdailyIdxList = await _getWhiteListIndexListToBeAdded()
 
-    console.log("CREATE ACCOUNT...");
-    await caver.klay.accounts.wallet.create(length);
+    console.log("CREATE ACCOUNT...")
+    await caver.klay.accounts.wallet.create(brdailyIdxList.length)
+    
+    let brdailyIdx = undefined
+    let lastBrdailyIdx = brdailyIdxList[brdailyIdxList.length - 1]
 
-    for (let i = 0; i < length; i++) {
-        console.log(`++++++++++++++++++++++++++++++++++++++${i}'th Iteration ${brdailyIdxList[i]} / ${colorBoard.FgRed}${brdailyIdxList[length - 1]}++++++++++++++++++++++++++++++++++++++`);
-        const key = caver.klay.accounts.wallet.getKlaytnWalletKey(i + 1);
+    for (let i = 0; i < brdailyIdxList.length; i++) {
+        brdailyIdx = brdailyIdxList[i] 
+        console.log(`++++++++++++++++++++++++++++++++++++++${i}'th Iteration ${brdailyIdx} / ${lastBrdailyIdx}++++++++++++++++++++++++++++++++++++++`)
+        const key = caver.klay.accounts.wallet.getKlaytnWalletKey(i + 1)
         const account = {
             "address": key.slice(70,140),
             "privateKey": key.slice(0,66)
         }
-        console.log(`address: ${account.address}`);
-        console.log(`privateKey: ${account.privateKey}`);
-        let receipt = null;
+        console.log(`address: ${account.address}`)
+        console.log(`privateKey: ${account.privateKey}`)
+        let receipt = undefined
         try {
-            receipt = await addWhiteList(account.address, feePayer);
+            receipt = await addWhiteList(account.address, feePayer)
         } catch (error) {
-            const message = helper.createErrorMessage('add white list', __filename);
-            pushq.sendMessage(message);
-            throw new Error(error);
+            const message = helper.createErrorMessage('add white list', __filename)
+            pushq.sendMessage(message)
+            throw new Error(error)
         }
 
-        const whiteListTxHash = receipt.transactionHash;
-        console.log(`whiteListTxHash: ${whiteListTxHash}`);
+        console.log(`whiteListTxHash: ${receipt.transactionHash}`)
 
-        let uploadedDate = new Date().toISOString(); // UTC format
-        uploadedDate = uploadedDate.replace(/T/, ' ').replace(/\..+/, '');
+        let uploadedDate = new Date().toISOString() // UTC format
+        uploadedDate = uploadedDate.replace(/T/, ' ').replace(/\..+/, '')
 
         const updateQuery = 
             `UPDATE brdaily_uploaded_log \
             SET whitelist_contract_address='${whiteList._address}', \
-            whitelist_transaction_hash='${whiteListTxHash}', \
+            whitelist_transaction_hash='${receipt.transactionHash}', \
             whitelist_uploaded_date='${uploadedDate}', \
             from_address='${account.address}', \
             from_private_key='${account.privateKey}' \
-            WHERE brdaily_idx='${brdailyIdxList[i]}'`;
+            WHERE brdaily_idx='${brdailyIdx}'`
 
         try {
-            await schemaLog.query(updateQuery);
+            await schemaLog.query(updateQuery)
         } catch (error) {
-            console.log(error);
-            process.exit(1);
+            console.log(error)
+            process.exit(1)
         }
-        console.log(`--------------------------------------${i}'th Iteration--------------------------------------`); 
+        console.log(`--------------------------------------${i}'th Iteration--------------------------------------`) 
     }
-    process.exit(1);
+    process.exit(1)
 }
 
-async function addWhiteListUsingWorker() {
-    const worker = process.argv[2];
-    const directoryPath = `${__dirname}/../work`;
-    const workSheet = `${directoryPath}/white_list_worker_${worker}.json`;
-
-    const feePayer = await caver.klay.accounts.wallet.add(
-        vault.cypress.accounts.delegate.privateKey,
-        vault.cypress.accounts.delegate.address
-    );
-    
-    if (fs.existsSync(workSheet)) {
-        // pass
-    } else {
-        console.log(`workSheet isn't exist. prcoess seems to be over.`);
-        process.exit(1);
+(async function () {
+    if (process.argv[2] == 'add') {
+        console.log('add batch start...')
+        await addWhiteListUsingList()
     }
-   
-    const rawdata = await readLastLines.read(workSheet, 1);
-    const workQuota = JSON.parse(rawdata);
-    let workStatus = {};
-    workStatus.from = parseInt(workQuota.from);
-    workStatus.to = parseInt(workQuota.to);
-    workStatus.current = parseInt(workQuota.current);
-   
-    console.log(`Allocated Workload`);
-    console.log(workQuota);
-    while(true) {
-        console.log(`${colorBoard.FgGreen}++++++++++++++++++++++++++++++++++++++${colorBoard.FgYellow}${workStatus.current} / ${colorBoard.FgRed}${workStatus.to}${colorBoard.FgGreen}++++++++++++++++++++++++++++++++++++++`); 
-
-        const account = caver.klay.accounts.create(caver.utils.randomHex(32));
-        workStatus.account = account;
-        console.log(`${colorBoard.FgWhite}address: ${colorBoard.FgCyan} ${account.address}`);
-        console.log(`${colorBoard.FgWhite}privateKey: ${colorBoard.FgCyan} ${account.privateKey}`);
-
-        let receipt = null;
-        try {
-            receipt = await addWhiteList(account.address, feePayer);
-        } catch (error) {
-            console.log(error);
-            process.exit(1);
-        }
-
-        const whiteListTxHash = receipt.transactionHash;
-        workStatus.transactionHash = whiteListTxHash;
-        console.log(`${colorBoard.FgWhite}whiteListTxHash: ${colorBoard.FgYellow} ${whiteListTxHash}`);
-
-        let uploadedDate = new Date().toISOString(); // UTC format
-        uploadedDate = uploadedDate.replace(/T/, ' ').replace(/\..+/, '');
-        
-
-        // update query
-        const updateQuery = 
-            `UPDATE brdaily_uploaded_log \
-            SET whitelist_contract_address='${whiteList._address}', \
-            whitelist_transaction_hash='${whiteListTxHash}', \
-            whitelist_uploaded_date='${uploadedDate}', \
-            from_address='${account.address}', \
-            from_private_key='${account.privateKey}' \
-            WHERE brdaily_idx='${workStatus.current}'`;
-
-        try {
-            await schemaLog.query(updateQuery);
-        } catch (error) {
-            console.log(error);
-            process.exit(1);
-        }
-        workStatus.uploadedDate = uploadedDate;
-        console.log(`${colorBoard.FgWhite}workStatus:`);
-        console.log(workStatus);
-
-        // add line to json file
-        try {
-            fs.appendFileSync(workSheet, JSON.stringify(workStatus) + '\n');
-        } catch (error) {
-            console.log(error);
-            process.exit(1);
-        }
-
-        console.log(updateQuery);
-        
-        workStatus.current++;
-        if (workStatus.current > workStatus.to)
-            break;
-        console.log(`${colorBoard.FgRed}--------------------------------------${colorBoard.FgWhite}${workStatus.to - workStatus.current} remained.${colorBoard.FgRed}--------------------------------------`); 
-    }
-    process.exit(1);
-}
-
-module.exports = {
-    addWhiteListUsingList: addWhiteListUsingList
-}
+})()
