@@ -30,7 +30,7 @@ const schemaLog = new dbPromiseInterface('log')
 async function _getBrdailyIdxToBeAdded() {
     const query = 
         `SELECT brdaily_idx FROM brdaily_uploaded_log \
-        WHERE storage_transaction_hash IS NULL \
+        WHERE storage_contract_address IS NULL \
         AND whitelist_transaction_hash IS NOT NULL \
         ORDER BY brdaily_idx ASC LIMIT 1`
     let result = undefined 
@@ -77,6 +77,8 @@ async function _exsitsInSmartContract(clbIndex) {
     const wafBlackIp = await cloudbricWafBlackIpStorage.methods.getWafBlackIpAtClbIndex(
         helper.stringToBytes32(clbIndex)
     ).call()
+    console.debug(`exsitsInSmartContract check whether ${clbIndex} already exists in Smart Contract or not`)
+    console.debug(wafBlackIp)
     
     if (wafBlackIp == undefined || wafBlackIp == null) {
         return false
@@ -89,22 +91,22 @@ async function _exsitsInSmartContract(clbIndex) {
  * @param {String} brdailyIdx 
  */
 async function _restoreCrash(brdailyIdx) {
-    let crashExsits = false
     try {
-        crashExsits = _exsitsInSmartContract(brdailyIdx)
-        if (crashExsits) {
-            // data exsits in Cloudbric database and Smart contract also, means OK
-            console.log('data exsits in Cloudbric database and Smart contract also, means OK')
-        } else {
+        const exists = _exsitsInSmartContract(brdailyIdx)
+        if (exists) {
             // FIX ME: restoring crash must include below steps.
             // 1. Search block related with lastInsertedBrdailyIdx.
             // 2. Update uploaded date with date when block created.
             // 3. To do, we should write some code to track events.
+            // 4. And Update uploaded_date too.
+            console.debug('Data exsits in Cloudbric and Smart contract also')
+            console.debug(`So ${brdailyIdx} is not a target, now start restore crash...`)
             const updateQuery = `UPDATE brdaily_uploaded_log \
-                SET storage_contract_address='${cloudbricWafBlackIpStorage._address}', \
-                waf_black_ip_uploaded_date='${uploaded_date}' \
+                SET storage_contract_address='${cloudbricWafBlackIpStorage._address}' \
                 WHERE brdaily_idx='${brdailyIdx}'`
             await schemaLog.query(updateQuery)
+        } else {
+            // data exsits in Cloudbric database but not in Smart contract also, means OK
         }
     } catch (err) {
         console.log(err)
@@ -178,6 +180,7 @@ async function setupProcess() {
  * Add multiple black ip data which is detected by Cloudbric WAF sequnetially.
  */
 async function addWafBlackIpBatch() {
+    console.log('add batch start...')
     let feePayer = undefined
     try {
         feePayer = await caver.klay.accounts.wallet.add(
@@ -196,7 +199,6 @@ async function addWafBlackIpBatch() {
         console.log(brdailyIdx)
         const ipfsCidInfo = await _getIpfsCidInfo(brdailyIdx)
         const multihash = helper.ipfsHashToMultihash(ipfsCidInfo.ipfs_cid)
-        console.log(multihash)
 
         const dataSet = {
             clbIndex: brdailyIdx,
@@ -250,7 +252,6 @@ async function addWafBlackIpBatch() {
 
 (async function () {
     if (process.argv[2] == 'add') {
-        console.log('add batch start...')
         await setupProcess()
         await addWafBlackIpBatch()
     }
