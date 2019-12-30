@@ -246,8 +246,9 @@ async function addWafBlackIpBatch() {
             console.log(error)
             process.exit(1)
         }
-
     }
+    console.log('Success to upload black ip data to Klaytn')
+    process.exit(1)
 }
 
 (async function () {
