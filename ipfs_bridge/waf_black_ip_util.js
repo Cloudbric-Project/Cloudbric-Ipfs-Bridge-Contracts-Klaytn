@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const APP_ROOT_DIR = path.join(__dirname, '..')
 
-let private = fs.readFileSync(path.join(APP_ROOT_DIR, '/private/.ipfs.json')).toString()
+let private = fs.readFileSync(path.join(APP_ROOT_DIR, 'private/.ipfs.json')).toString()
 private = JSON.parse(private) 
 
 const ipfsClient = require('ipfs-http-client')

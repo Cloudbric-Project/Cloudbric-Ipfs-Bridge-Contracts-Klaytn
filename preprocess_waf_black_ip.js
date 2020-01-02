@@ -1,11 +1,14 @@
-const fs = require('fs');
-const constant = require(`${__dirname}/config/constant`);
-const dbPromiseInterface = require(`${__dirname}/db/db_promise`);
-const schemaBr = new dbPromiseInterface('br');
-const schemaLog = new dbPromiseInterface('log');
-const dataStorage = `${__dirname}/data/waf_black_ip`;
-const helper = require(`${__dirname}/helper/helper`);
-const pushq = require(`${__dirname}/helper/pushq`);
+const fs = require('fs')
+const path = require('path')
+const APP_ROOT_DIR = path.join(__dirname)
+const constant = require(path.join(APP_ROOT_DIR, 'config/constant'))
+const cdbPromiseInterface = require(path.join(APP_ROOT_DIR, 'db/db_promise'))
+const helper = require(path.join(APP_ROOT_DIR, 'helper/helper'))
+const pushq = require(path.join(APP_ROOT_DIR, 'helper/pushq'))
+
+const schemaBr = new dbPromiseInterface('br')
+const schemaLog = new dbPromiseInterface('log')
+const dataStorage = path.join(APP_ROOT_DIR, 'data/waf_black_ip')
 
 /**
  * fetch rows from brdaily table from starting point(last inserted index + 1)
@@ -83,4 +86,7 @@ async function main() {
     }
     process.exit(1);
 }
-main();
+
+(async function () {
+    await main()
+})()
