@@ -70,18 +70,18 @@ async function getWafBlackIpAtClbIndex(clbIndex) {
 }
 
 /**
- * Check whether black ip data already exsits in smart contract "CloudbricWafBlackIpStorage".
+ * Check whether black ip data already exists in smart contract "CloudbricWafBlackIpStorage".
  * @param {string | number} clbIndex same with brdailyIdx but generally it also called "clbIndex"
  * @return {boolean}
  */
-async function _exsitsInSmartContract(clbIndex) {
+async function _existsInSmartContract(clbIndex) {
     if (typeof clbIndex === "number") {
         clbIndex = clbIndex.toString()
     }
     const wafBlackIp = await cloudbricWafBlackIpStorage.methods.getWafBlackIpAtClbIndex(
         helper.stringToBytes32(clbIndex)
     ).call()
-    console.debug(`exsitsInSmartContract check whether ${clbIndex} already exists in Smart Contract or not`)
+    console.debug(`existsInSmartContract check whether ${clbIndex} already exists in Smart Contract or not`)
     console.debug(wafBlackIp)
     
     if (wafBlackIp.size == 0 || wafBlackIp == null) {
@@ -93,12 +93,12 @@ async function _exsitsInSmartContract(clbIndex) {
 }
 
 /**
- * Check wether crash exsits or not. If so restore crash.
+ * Check wether crash exists or not. If so restore crash.
  * @param {Object} brdailyIdxInfo which has two properties brdailyIdx and fromAddress
  */
 async function _restoreCrash(brdailyIdxInfo) {
     try {
-        const exists = await _exsitsInSmartContract(brdailyIdxInfo.brdailyIdx)
+        const exists = await _existsInSmartContract(brdailyIdxInfo.brdailyIdx)
         if (exists) {
             console.debug(`${brdailyIdxInfo.brdailyIdx} is not a target because already exists in Smart Contract. So start restore crash...`)
             console.debug(`Get pastEvent using indexed parameter ${brdailyIdxInfo.fromAddress}`)
@@ -124,7 +124,7 @@ async function _restoreCrash(brdailyIdxInfo) {
             }
             await schemaLog.query(updateQuery)
         } else {
-            // data exsits in Cloudbric database but not in Smart contract also, means OK
+            // data exists in Cloudbric database but not in Smart contract also, means OK
         }
     } catch (err) {
         console.log(err)
