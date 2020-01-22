@@ -10,3 +10,8 @@
 		* there is a configuration files about admin addresses.
 		* etc...
 	* and then you should create these files of your own.
+
+
+## Spec
+* Node.js
+* Truffle framework

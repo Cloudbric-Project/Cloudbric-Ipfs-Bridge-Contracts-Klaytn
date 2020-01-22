@@ -6,6 +6,11 @@ const APP_ROOT_PATH = path.join(__dirname, '..')
 const dbSecret = fs.readFileSync(path.join(APP_ROOT_PATH, 'private/.db.json')).toString()
 const vault = JSON.parse(dbSecret)
 
+/**
+ * @notice mysql npm library dosen't support Promise interface officially.
+ * This project use mostly Async / Await, so we decided to use custom Promise interface for mysql npm library. 
+ * What we did is just wrapping mysql code with Promise interface.
+ */
 class DBpromiseInterface {
     constructor(db) {
         this.connection = mysql.createConnection({

@@ -14,8 +14,8 @@ const schemaLog = new dbPromiseInterface('log')
 
 /**
  * Add single address to Cloudbric's WhiteList smart contract.
- * @param {String} address 
- * @param {Object} feePayer 
+ * @param {string} address 
+ * @param {object} feePayer 
  */
 async function addWhiteList(address, feePayer) { 
     let abiAddWhiteList = 
@@ -43,7 +43,7 @@ async function addWhiteList(address, feePayer) {
 
 /**
  * Get index to be added to blockchain.
- * @return {Number}
+ * @return {number}
  */
 async function _getWhiteListIndexToBeAdded() {
     const query = 
@@ -59,7 +59,7 @@ async function _getWhiteListIndexToBeAdded() {
 
 /**
  * Get list of index to be added to blockchain.
- * @return {Array<Number>}
+ * @return {Array<number>}
  */
 async function _getWhiteListIndexListToBeAdded() {
     const getBrdailyIdxList =

@@ -7,7 +7,6 @@
  *     2. Store cid of IPFS to Klaytn Smart Contract.
  *    This script is a script of Step 2.
  */
-
 const path = require('path')
 const APP_ROOT_DIR = path.join(__dirname, '..')
 const caverConfig = require(path.join(APP_ROOT_DIR, 'config/caver'))
@@ -17,6 +16,7 @@ const helper = require(path.join(APP_ROOT_DIR, 'helper/helper'))
 const pushq = require(path.join(APP_ROOT_DIR, 'helper/pushq'))
 const constant = require(path.join(APP_ROOT_DIR, 'config/constant'))
 const dbPromiseInterface = require(path.join(APP_ROOT_DIR, 'db/db_promise'))
+const eventWatcher = require(path.join(APP_ROOT_DIR, 'event/watcher'))
 
 const vault = caverConfig.vault
 const caver = caverConfig.caver
@@ -25,34 +25,38 @@ const schemaLog = new dbPromiseInterface('log')
 
 /**
  * Get brdailyIdx need to be inserted to smart contract.
- * @return {String}
+ * @return {Object}
  */
-async function _getBrdailyIdxToBeAdded() {
+async function _getBrdailyIdxInfoToBeAdded() {
     const query = 
-        `SELECT brdaily_idx FROM brdaily_uploaded_log \
+        `SELECT brdaily_idx, from_address FROM brdaily_uploaded_log \
         WHERE storage_contract_address IS NULL \
         AND whitelist_transaction_hash IS NOT NULL \
         ORDER BY brdaily_idx ASC LIMIT 1`
-    let result = undefined 
-    let brdailyIdx = undefined
+    let result = undefined
+    let brdailyIdxInfo = {
+        brdailyIdx: undefined,
+        fromAddress: undefined
+    }
     try {
         result = await schemaLog.query(query)
-        brdailyIdx =  result[0].brdaily_idx
+        brdailyIdxInfo.brdailyIdx =  result[0].brdaily_idx
+        brdailyIdxInfo.fromAddress = result[0].from_address
     } catch (err) {
         console.log(err)
         exit(1)
     }
 
-    if (result == undefined || brdailyIdx == undefined) {
+    if (result == undefined || brdailyIdxInfo.brdailyIdx == undefined) {
         console.log(`Select nothing, maybe there is logical error`)
         exit(1)
     }
-    return brdailyIdx
+    return brdailyIdxInfo
 }
 
 /**
  * Get a black ip detected by Cloudbric WAF.
- * @param {String | Number} clbIndex index in Cloudbric DB
+ * @param {string | number} clbIndex index in Cloudbric DB
  * @return {Object}
  */
 async function getWafBlackIpAtClbIndex(clbIndex) {
@@ -67,8 +71,8 @@ async function getWafBlackIpAtClbIndex(clbIndex) {
 
 /**
  * Check whether black ip data already exsits in smart contract "CloudbricWafBlackIpStorage".
- * @param {String | Number} clbIndex same with brdailyIdx but generally it also called "clbIndex"
- * @return {Boolean}
+ * @param {string | number} clbIndex same with brdailyIdx but generally it also called "clbIndex"
+ * @return {boolean}
  */
 async function _exsitsInSmartContract(clbIndex) {
     if (typeof clbIndex === "number") {
@@ -80,30 +84,44 @@ async function _exsitsInSmartContract(clbIndex) {
     console.debug(`exsitsInSmartContract check whether ${clbIndex} already exists in Smart Contract or not`)
     console.debug(wafBlackIp)
     
-    if (wafBlackIp == undefined || wafBlackIp == null) {
+    if (wafBlackIp.size == 0 || wafBlackIp == null) {
+        console.debug(`${clbIndex} does not exists in Smart Contract`)
         return false
     }
+    console.debug(`${clbIndex} exists in Smart Contract`)
     return true
 }
 
 /**
  * Check wether crash exsits or not. If so restore crash.
- * @param {String} brdailyIdx 
+ * @param {Object} brdailyIdxInfo which has two properties brdailyIdx and fromAddress
  */
-async function _restoreCrash(brdailyIdx) {
+async function _restoreCrash(brdailyIdxInfo) {
     try {
-        const exists = _exsitsInSmartContract(brdailyIdx)
+        const exists = await _exsitsInSmartContract(brdailyIdxInfo.brdailyIdx)
         if (exists) {
-            // FIX ME: restoring crash must include below steps.
-            // 1. Search block related with lastInsertedBrdailyIdx.
-            // 2. Update uploaded date with date when block created.
-            // 3. To do, we should write some code to track events.
-            // 4. And Update uploaded_date too.
-            console.debug('Data exsits in Cloudbric and Smart contract also')
-            console.debug(`So ${brdailyIdx} is not a target, now start restore crash...`)
-            const updateQuery = `UPDATE brdaily_uploaded_log \
-                SET storage_contract_address='${cloudbricWafBlackIpStorage._address}' \
-                WHERE brdaily_idx='${brdailyIdx}'`
+            console.debug(`${brdailyIdxInfo.brdailyIdx} is not a target because already exists in Smart Contract. So start restore crash...`)
+            console.debug(`Get pastEvent using indexed parameter ${brdailyIdxInfo.fromAddress}`)
+            const pastEvent = await eventWatcher.retrieveAddWafBlackIp(brdailyIdxInfo.fromAddress)
+            let updateQuery = undefined
+            if (pastEvent != undefined) { 
+                console.debug(`found pastEvent which tell us "fromAddress added black ip data to Klaytn Contract"`)
+                updateQuery = `UPDATE brdaily_uploaded_log \
+                    SET storage_contract_address='${cloudbricWafBlackIpStorage._address}' \
+                    SET storage_transaction_hash='${pastEvent.transactinoHash}' \
+                    WHERE brdaily_idx='${brdailyIdxInfo.brdailyIdx}'`
+
+            // You might have question: "Why don't you update 'waf_black_ip_uploaded_date' field too?"
+            // Here is answer: 
+            //   1. If we have a transaction hash, we can get a block number.
+            //   2. Now we can get a timestamp when the block was created using block number. 
+            //   3. So we don't need uploaded date field actually.
+            } else {
+                console.debug(`Unexpected situation... LETS FIX IT NEAR IN THE FUTURE`)
+                updateQuery = `UPDATE brdaily_uploaded_log \
+                    SET storage_contract_address='${cloudbricWafBlackIpStorage._address}' \
+                    WHERE brdaily_idx='${brdailyIdxInfo.brdailyIdx}'`
+            }
             await schemaLog.query(updateQuery)
         } else {
             // data exsits in Cloudbric database but not in Smart contract also, means OK
@@ -116,7 +134,7 @@ async function _restoreCrash(brdailyIdx) {
 
 /**
  * Get list of index to be added to blockchain.
- * @return {Array<Number>}
+ * @return {Array<number>}
  */
 async function _getBrdailyIdxListToBeAdded() {
     const getBrdailyIdxList =
@@ -138,11 +156,13 @@ async function _getBrdailyIdxListToBeAdded() {
  */
 async function scanWafBlackIpStorage() {
     const wafBlackIpListSize = await cloudbricWafBlackIpStorage.methods.wafBlackIpListSize().call()
-    console.log(wafBlackIpListSize)
+    console.debug(`wafBlackIpListSize: ${wafBlackIpListSize}`)
 
     let wafBlackIp = undefined
+
     for (let i = 0; i < wafBlackIpListSize; i++) {
         wafBlackIp = await cloudbricWafBlackIpStorage.methods.getWafBlackIpAtIndex(i).call()
+        console.debug(wafBlackIp)
    }
 }
 
@@ -151,7 +171,7 @@ async function scanWafBlackIpStorage() {
  * 1. ipfs_cid: cid of IPFS contents which means black ip detected by Cloudbric WAF.
  * 2. from_address: who upload black ip to IPFS.
  * 3. from_private_key: private key of address.
- * @param {String | Number} brdailyIdx 
+ * @param {string | number} brdailyIdx 
  * @return {Object}
  */
 async function _getIpfsCidInfo(brdailyIdx) {
@@ -168,12 +188,11 @@ async function _getIpfsCidInfo(brdailyIdx) {
 }
 
 /**
- * Check wether crash exsits or not and take action properly.
- * @return {String} brdailyIndex need to be inserted into smart contract.
+ * Setup process before adding black ip detected by Cloudsbric WAF to Klaytn Smart Contract
  */
 async function setupProcess() {
-    let brdailyIdx = await _getBrdailyIdxToBeAdded()
-    await _restoreCrash(brdailyIdx)
+    let brdailyIdxInfo = await _getBrdailyIdxInfoToBeAdded()
+    await _restoreCrash(brdailyIdxInfo)
 }
 
 /**
@@ -251,9 +270,52 @@ async function addWafBlackIpBatch() {
     process.exit(1)
 }
 
+/**
+ * 
+ */
+async function _restoreTransactionHashCrash () {
+    const query = 
+    `SELECT from_address FROM brdaily_uploaded_log \
+    WHERE storage_transaction_hash IS NULL \
+    AND whitelist_transaction_hash IS NOT NULL \
+    `
+    let result = undefined 
+    try {
+        result = await schemaLog.query(query)
+        console.debug(`get ${result.length} addresses`)
+        for (let i = 0; i < result.length; i++) {
+            let from_address = result[i].from_address
+            console.log(from_address)
+            let pastEvenets = await eventWatcher.retrieveAddWafBlackIp(from_address)
+            if (pastEvenets[0] != undefined) {
+                console.log(pastEvenets[0].transactionHash)
+            }
+        }
+    } catch (err) {
+        console.log(err)
+        exit(1)
+    }
+
+    /*
+    if (result == undefined || brdailyIdx == undefined) {
+        console.log(`Select nothing, maybe there is logical error`)
+        exit(1)
+    }
+    return brdailyIdx
+    */
+}
+
 (async function () {
     if (process.argv[2] == 'add') {
         await setupProcess()
         await addWafBlackIpBatch()
+    } else if (process.argv[2] == 'scan') {
+        await scanWafBlackIpStorage()
+    } else if (process.argv[2] == 'restore') {
+        await _restoreTransactionHashCrash()
+    } else if (process.argv[2] == 'get') {
+        const brdailyIdx = process.argv[3]
+        const result = await getWafBlackIpAtClbIndex(brdailyIdx)
+        console.debug(result.size == 0)
     }
 })()
