@@ -108,7 +108,7 @@ async function _restoreCrash(brdailyIdxInfo) {
                 console.debug(`found pastEvent which tell us "fromAddress added black ip data to Klaytn Contract"`)
                 updateQuery = `UPDATE brdaily_uploaded_log \
                     SET storage_contract_address='${cloudbricWafBlackIpStorage._address}' \
-                    SET storage_transaction_hash='${pastEvent.transactinoHash}' \
+                    SET storage_transaction_hash='${pastEvent.transactionHash}' \
                     WHERE brdaily_idx='${brdailyIdxInfo.brdailyIdx}'`
 
             // You might have question: "Why don't you update 'waf_black_ip_uploaded_date' field too?"
