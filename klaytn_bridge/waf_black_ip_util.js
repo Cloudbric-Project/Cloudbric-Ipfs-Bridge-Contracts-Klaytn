@@ -270,41 +270,6 @@ async function addWafBlackIpBatch() {
     process.exit(1)
 }
 
-/**
- * 
- */
-async function _restoreTransactionHashCrash () {
-    const query = 
-    `SELECT from_address FROM brdaily_uploaded_log \
-    WHERE storage_transaction_hash IS NULL \
-    AND whitelist_transaction_hash IS NOT NULL \
-    `
-    let result = undefined 
-    try {
-        result = await schemaLog.query(query)
-        console.debug(`get ${result.length} addresses`)
-        for (let i = 0; i < result.length; i++) {
-            let from_address = result[i].from_address
-            console.log(from_address)
-            let pastEvenets = await eventWatcher.retrieveAddWafBlackIp(from_address)
-            if (pastEvenets[0] != undefined) {
-                console.log(pastEvenets[0].transactionHash)
-            }
-        }
-    } catch (err) {
-        console.log(err)
-        exit(1)
-    }
-
-    /*
-    if (result == undefined || brdailyIdx == undefined) {
-        console.log(`Select nothing, maybe there is logical error`)
-        exit(1)
-    }
-    return brdailyIdx
-    */
-}
-
 (async function () {
     if (process.argv[2] == 'add') {
         await setupProcess()
@@ -316,6 +281,6 @@ async function _restoreTransactionHashCrash () {
     } else if (process.argv[2] == 'get') {
         const brdailyIdx = process.argv[3]
         const result = await getWafBlackIpAtClbIndex(brdailyIdx)
-        console.debug(result.size == 0)
+        console.debug(result)
     }
 })()
